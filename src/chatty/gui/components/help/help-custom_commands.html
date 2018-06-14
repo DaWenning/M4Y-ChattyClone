@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+	<title>Chatty - Custom Commands / Context Menus</title>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+<body>
+    <div id="backlink"><a href="help.html">To main help page</a></div>
+    <h1><a name="top">Custom Commands / Context Menus</a></h1>
+    
+    <p>Under <code>Settings - Commands</code> you can add Custom Commands and
+        customize some Context Menus (and the User Info Dialog) with your own entries.</p>
+    
+    <ul>
+        <li><a href="#custom-commands">Custom Commands</a></li>
+        <li>
+            <a href="#replacements">Replacements</a>
+            <ul>
+                <li><a href="#simple-replacements">Simple Replacements</a></li>
+                <li><a href="#parameters-context">Pre-defined Parameters</a></li>
+                <li><a href="#functions">Functions</a></li>
+                <li><a href="#custom-replacements">Custom Replacements</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#menus">Custom Context Menus / User Dialog Buttons</a>
+            <ul>
+                <li><a href="#commands-list">Format 1: List Custom Command Names</a></li>
+                <li><a href="#inline-commands">Format 2: Inline-Commands</a></li>
+                <li><a href="#submenus">Format 3: Submenus</a></li>
+                <li><a href="#separators">Separators</a></li>
+                <li><a href="#shortcuts">Shortcuts</a></li>
+                <li><a href="#positioning">Positioning</a></li>
+                <li><a href="#special-commands">Special Commands</a></li>
+            </ul>
+        </li>
+    </ul>
+    
+    <h2><a name="custom-commands">Custom Commands</a></h2>
+    <p>Custom commands allow you to specify aliases for anything you could also
+        enter directly into the inputbox, like chat messages or regular
+        commands (with the exception of other custom commands, which is a
+        limitation implemented to prevent infinite loops).</p>
+    
+    <p>To add a Custom Command add a new entry to the list labeled
+        "Custom Commands", in the following format:</p>
+    
+    <p><code>/&lt;commandName&gt; &lt;what the command should do&gt;</code></p>
+    
+    <p>Everything up to the first space is the <em>name</em>
+        of the command, and everything after the first space is what the command
+        will do or execute. For example:</p>
+    
+    <p><code>/hello Hello World!</code></p>
+    
+    <p>If you added that to the Custom Commands list and
+        enter <code>/hello</code> in the inputbox, then it would send
+        <code>Hello World!</code> to chat, just as if you would have written it
+        yourself and pressed Enter.</p>
+    
+    <p>Adding a <code>#</code> and a channel name you can restrict the command
+        to that channel:</p>
+    
+    <p><code>/hello#joshimuz Hello Joshimuz Chat!</code></p>
+    
+    <p>This <code>/hello</code> command would only be executed in #joshimuz,
+        however if you still have the version without a channel in the Custom
+        Commands list as well, it will fallback to that in other channels. This
+        way to can add variations of commands for specific channels.</p>
+    
+    <h2><a name="replacements">Replacements</a></h2>
+    <ul>
+        <li><a href="#simple-replacements">Simple Replacements</a></li>
+        <li><a href="#parameters-context">Pre-defined Parameters</a></li>
+        <li><a href="#functions">Functions</a></li>
+        <li><a href="#custom-replacements">Custom Replacements</a></li>
+    </ul>
+    
+    <p>Anything starting with <code>$</code> in the <code>&lt;what the command
+        should do&gt;</code> section is treated as some sort of replacement.
+        Each replacement must contain an <strong>identifier</strong>
+        which identifies what the replacement should be replaced with.</p>
+    
+    <p>For the <strong>short notation</strong> the identifier is written
+        directly after the dollar sign: <code>$&lt;identifier&gt;</code> .
+        In thise case it may only consist of a number and an optional dash:
+        <code>$&lt;1-9&gt;[-]</code> . Numeric identifiers refer to the parameters
+        supplied to the command.</p>
+    
+    <p>For the <strong>regular notation</strong> the identifier is written after
+        the <code>$</code> in parentheses: <code>$(&lt;identifier&gt;)</code> .
+        This type of notation makes a more clear distinction between replacement
+        and the rest of the (literal) text and may contain numbers (including higher than 9)
+        and other identifiers, depending on the context.</p>
+    
+    <p>Put <code>$$</code> (the <code>$</code> twice) for any
+        <strong>required replacement</strong> (for example <code>$$1</code> ),
+        which means the whole Custom Command will only be run if that replacement
+        turns into a non-empty value. This can be used to make sure that a
+        parameter that is necessary for the command to make sense is actually
+        being supplied.</p>
+    
+    <p class="note"><em>Note:</em> If you want to use a dollar sign
+        <code>$</code> without it having a special meaning, you can escape it
+        with a backslash: <code>\$</code> . To use a backslash literally instead
+        of as an escaping character, it must be escaped as well: <code>\\</code> .</p>
+    
+    <h3><a name="simple-replacements">Simple Replacements</a></h3>
+    <p>A basic use of replacements is using the <strong>short notation</strong>
+        to put in parameters supplied when executing the command. Consider this
+        Custom Command:</p>
+    
+    <p><code>/slap /me slaps <strong>$$1</strong> around a bit with a large trout</code></p>
+    
+    <p>Then, when you enter <code>/slap moobot</code> in the inputbox, it will
+        replace <code>$$1</code> with the first word after the command, which in
+        this case would be <code>moobot</code>, making the resulting command:</p>
+    
+    <p><code>/me slaps <strong>moobot</strong> around a bit with a large trout</code></p>
+    
+    <p>This is the syntax for specifying parameters (word in this context means
+    anything seperated by a space):</p>
+    <dl>
+        <dt><code>$1, $2, $3</code></dt>
+        <dd>First word, second word, third word etc.</dd>
+        <dd><code>$(1), $(2), $(3)</code> is the equivalent in the regular notation</dd>
+        
+        <dt><code>$1-</code></dt>
+        <dd>First word, and all the words after it</dd>
+        <dd><code>$2-, $3-</code> is also possible</dd>
+        <dd><code>$(1-), $(2-), $(3-)</code> is the equivalent in the regular notation</dd>
+        
+        <dt><code>$$1</code></dt>
+        <dd>First word, but required, meaning the command will only be executed
+            if this parameter is actually present</dd>
+        <dd><code>$$2, $$3-</code> is also possible</dd>
+        <dd><code>$$(1), $$(2), $$(3-)</code> is the equivalent in the regular notation</dd>
+    </dl>
+    
+    <p>The short notation ( <code>$1</code> ) only works for the numbers 1 to 9,
+        which usually should be enough. For other kinds of replacements you must
+        use the regular notation including parentheses: <code>$(1)</code> .</p>
+    
+    <h3><a name="parameters-context">Pre-defined Parameters</a></h3>
+    <p>Custom Commands can be used in a number of different places. Depending on
+        the context there are different pre-defined parameters available. The
+        following table shows which identifiers can be used in which
+        context. To use an identifier put it in a replacement, for example
+        <code>$(chan)</code> or <code>$$join(1-,/)</code>.</p>
+    
+    <table class="settings">
+        <tr>
+            <th>Context</th>
+            <th>Identifier</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td rowspan="7"><em>All</em></td>
+            <td><code>chan</code></td>
+            <td>The current channel context (without leading #)</td>
+        </tr>
+        <tr>
+            <td><code>streamstatus</code></td>
+            <td>Stream Status (Title/Game or Offline)</td>
+        </tr>
+        <tr>
+            <td><code>streamtitle</code></td>
+            <td>Stream Title (only if live)</td>
+        </tr>
+        <tr>
+            <td><code>streamgame</code></td>
+            <td>Stream Game (only if live)</td>
+        </tr>
+        <tr>
+            <td><code>streamviewers</code></td>
+            <td>Number of viewers (only if live)</td>
+        </tr>
+        <tr>
+            <td><code>streamuptime</code></td>
+            <td>Stream Uptime (only if live)</td>
+        </tr>
+        <tr>
+            <td colspan="2">The stream info is of the current channel context</td>
+        </tr>
+        <tr>
+            <td>User Context Menu</td>
+            <td><code>1</code></td>
+            <td>Name of the user</td>
+        </tr>
+        <tr>
+            <td rowspan="2">User Dialog</td>
+            <td><code>1</code></td>
+            <td>Name of the user</td>
+        </tr>
+        <tr>
+            <td><code>2-</code></td>
+            <td>Ban reason (if selected)</td>
+        </tr>
+        <tr>
+            <td>Channel Context menu</td>
+            <td><code>1</code></td>
+            <td>Name of the currently active channel (without leading #)</td>
+        </tr>
+        <tr>
+            <td>Streams Context menu</td>
+            <td><code>1-</code></td>
+            <td>Names of selected streams</td>
+        </tr>
+        <tr>
+            <td>Hotkey</td>
+            <td><code>1</code></td>
+            <td>The currently <a href="help.html#userselection">selected user</a> (if present)</td>
+        </tr>
+    </table>
+    
+    <p>Example with pre-defined parameters:</p>
+    <dl class="defList">
+        <dt><code>/streaminfo /echo [Stream Status] $(streamstatus) [Uptime] $(streamuptime)</code></dt>
+        <dd>Entering <code>/streaminfo</code> outputs an info message (only for
+            you) with the current stream status and uptime.</dd>
+    </dl>
+    
+    <p>In addition, there is an implicit channel context, which means channel-aware
+        commands like <code>/ban</code> are executed in the appropriate channel.</p>
+    
+    <h3><a name="functions">Functions</a></h3>
+    <p>There is a very limited amount of functions available. Functions are
+        replacements, however they have a function name before the identifier (there
+        is no short notation for functions):</p>
+        
+    <p><code>$&lt;functionName&gt;(&lt;identifier&gt;,&lt;some parameters&gt;,[optional parameters])</code></p>
+    
+    <p>The following functions are available:</p>
+    <dl class="defList">
+        <dt><code>$if(&lt;identifier&gt;,&lt;output if exists&gt;,[output if not])</code></dt>
+        <dd>If the value the identifier refers to exists (non-empty), it will
+            return the first function parameter, the second otherwise.</dd>
+        <dd><em>Example:</em> <code>$if(1,$1,nope)</code> with command parameters <code>cheese cake</code> turns into <code>cheese</code>,
+            with no parameters turns into <code>nope</code>, the optional <code>[output if not]</code> function parameter.</dd>
+        
+        <dt><code>$ifeq(&lt;identifier&gt;,&lt;comparison&gt;,&lt;output if equal&gt;,[output if not])</code></dt>
+        <dd>Similar to <code>$if</code>, but instead of just checking fot the
+            existence of a parameter it compares it to a given value
+            (<code>&lt;comparison&gt;</code>).</dd>
+        <dd><em>Example:</em> <code>$ifeq(1,cheesecake,yummy)</code> with parameters
+            <code>cheesecake</code> turns into <code>yummy</code>, with parameters
+            <code>cheese cake</code> turns into an an empty string, since the
+            optional <code>[output if not]</code> has not been specified.</dd>
+        
+        <dt><code>$join(&lt;identifier&gt;,&lt;separator&gt;)</code></dt>
+        <dd>Joins together the arguments the identifier refers to, using the
+            given separator.</dd>
+        <dd><em>Example:</em> <code>$join(1-,/)</code> with <code>1-</code> referring to
+            <code>flour sugar eggs</code> turns into <code>flour/sugar/eggs</code></dd>
+        <dd>This effectively replaces spaces in the parameters with the separator.</dd>
+        
+        <dt><code>$lower(&lt;identifier&gt;)</code></dt>
+        <dd>Makes the given input lowercase.</dd>
+        <dd><em>Example:</em> <code>$lower(1)</code> with <code>1</code>
+            referring to <code>Fremily</code> turns into <code>fremily</code>.</dd>
+    </dl>
+    
+    <p class="note"><em>Note:</em> The <code>&lt;identifier&gt;</code> parameter means <em>only</em>
+        the identifier, without any <code>$</code>, while the other parameters
+        may contain replacements (including functions). You can think of this
+        function syntax as an extension to the regular replacement:
+        <code>$(1-) -> $<u>join</u>(1-<u>,/</u>)</code></p>
+    
+    <p class="note"><em>Addendum:</em> As of v0.8.7 the <code>&lt;identifier&gt;</code>
+        parameter will also accept replacements as input (anything starting with
+        <code>$</code>).</p>
+    
+    <p>Examples of Custom Commands with these functions:</p>
+    <dl class="defList">
+        <dt><code>/slap /me slaps $$1 around a bit with a large $if(2,$2,trout)</code></dt>
+        <dd>Entering <code>/slap Nightbot</code> turns into <code>/me slaps Nightbot around a bit with a large trout</code></dd>
+        <dd>Entering <code>/slap Nightbot cheesecake</code> turns into <code>/me slaps Nightbot around a bit with a large cheesecake</code></dd>
+        
+        <dt><code>/mt /openUrlPrompt http://multitwitch.tv/$$join(1-,/)</code></dt>
+        <dd>Entering <code>/mt</code> outputs an "insufficient parameters" message
+            because the <code>$$join</code> is required to return something,
+            which it can't from the identifier <code>1-</code> if there are no
+            parameters</dd>
+        <dd>Entering <code>/mt joshimuz lotsofs</code> opens the URL <code>http://multitwitch.tv/joshimuz/lotsofs</code></dd>
+    </dl>
+    
+    <p class="note"><em>Note:</em> A backslash can be used to escape parenthesis
+        in function parameters. Example: <code>$if(streamuptime,$(streamuptime),(n/a\))</code>.
+        In this example only the closing one after <code>n/a</code> has to be
+        escaped, because the opening one doesn't have a special meaning in this
+        context and the ones around <code>streamuptime</code> have a special
+        meaning that takes precedence (opening/closing the replacement).</p>
+    
+    <h3><a name="custom-replacements">Custom Replacements</a></h3>
+    <p>You can create your own identifiers for replacements by adding an entry
+        to the Custom Commands list starting with an underscore:</p>
+    
+    <p><code>_m $ifeq(1,$(chan),,$$1: )</code></p>
+    
+    <p>Instead of a command, this creates an identifier that can be used in a
+        replacement:</p>
+    
+    <p><code>/faq $(_m)FAQ: https://pastebin.com/KySx3KDu</code></p>
+    
+    <p>When the <code>/faq</code> command is run, the <code>$(_m)</code> gets
+        replaced with whatever is defined in <code>_m</code>, in this case it
+        creates a mention if the first parameter isn't equal to the current
+        channel.</p>
+    
+    <p class="note"><em>Note:</em> Custom identifiers always start with an
+        underscore and can themselves not contain replacements with custom
+        identifiers (well they technicially can, but they won't get replaced).</p>
+    
+    
+    <h2><a name="menus">Custom Context Menus / User Dialog Buttons</a></h2>
+    <ul>
+        <li><a href="#commands-list">Format 1: List Custom Command Names</a></li>
+        <li><a href="#inline-commands">Format 2: Inline-Commands</a></li>
+        <li><a href="#submenus">Format 3: Submenus</a></li>
+        <li><a href="#separators">Separators</a></li>
+        <li><a href="#shortcuts">Shortcuts</a></li>
+        <li><a href="#positioning">Positioning</a></li>
+        <li><a href="#special-commands">Special Commands</a></li>
+    </ul>
+    
+    <p>Under <code>Settings - Commands</code> there are several settings that
+        allow you to add additional entries/buttons in a few different places:</p>
+    
+    <dl class="dl-settings">
+        <dt>User Context Menu</dt>
+        <dd>Entries get appended to the menu that opens when you right-click on
+            a user in chat or the userlist.</dd>
+        
+        <dt>Channel Context Menu</dt>
+        <dd>Entries get appended to the menu that opens when you right-click on
+            the chat.</dd>
+        
+        <dt>Streams Context Menu</dt>
+        <dd>Entries get appended to any menu that contains a "Twitch Stream"
+            submenu (for example the User Context Menu, Live Streams Dialog
+            Context Menu).</dd>
+        
+        <dt>User Dialog Buttons</dt>
+        <dd>Defines which buttons are visible in the dialog that opens when you
+            click on a user in chat (or double-click in the userlist). Note
+            the <a href="#special-commands">Special Commands</a> you can use for
+            this setting.</dd>
+    </dl>
+    
+    <p>All those settings share the same format (with some slight differences
+        noted separately). A setting can contain several lines, and each line can contain one of the
+        available formats:</p>
+    
+    <div class="codeblock"><pre>
+/Ban[B] /Unban[U] 5s[1] 2m[2] 10m[3] 30m[4]
+Spoiler[S]=/timeout $$1 600 No spoilers
+
+@b1
+./Message /Report
+.Warn User=$$1: Plz no spammerino</pre></div>
+    
+    <p class="note"><em>Note:</em> Command Names/Labels may not contain the
+        characters <code>[ ] { }</code> except for their special meaning of
+        <a href="#shortcuts">Shortcuts</a> and <a href="#positioning">Positioning</a>.</p>
+    
+    
+    <h3><a name="commands-list">Format 1: List Custom Command Names</a></h3>
+    <p>You can list the name of several Custom Commands in one line, for example:</p>
+    
+    <p><code>/Slap /Permit</code></p>
+    
+    <p>Which means the command with the name "slap" will be added first, then
+        "permit" after that. These must be existing commands, either pre-defined
+        Chatty commands or Custom Commands you added yourself.</p>
+    
+    <p>Note that you may only specify the command names, no parameters. The
+        parameters will be supplied automatically depending on the <a href="#parameters-context">context</a>. For
+        example when you have <code>/Slap</code> added to the User Dialog and
+        then open the dialog on the user <code>tailsgaming</code> and click the
+        "Slap" button, it's as if you entered <code>/slap tailsgaming</code>.</p>
+    
+    <dl class="defList">
+        <dt><code>/Slap /Permit</code></dt>
+        <dd>Command names should be prepended with a forward slash <code>/</code>
+            (although it may also work without).</dd>
+        
+        <dt><code>//Slap</code></dt>
+        <dd>Prepending two forward slashes <code>//</code> will put the command
+            in the special submenu <code>More..</code> (for Context Menus) or in
+            a second line of buttons (for the User Dialog).</dd>
+        
+        <dt><code>/Set_color</code> is displayed as <code>Set color</code></dt>
+        <dd>Underscores in commands are replaced with a space for display in a
+            Context menu or on a button.</dd>
+    </dl>
+
+    <p>In the same line, you can also specify <strong>Timeout Buttons</strong>:</p>
+    <dl class="defList">
+        <dt><code>5 2m 10m</code></dt>
+        <dd>Times are added just like Custom Commands, except that they must not
+            start with a slash <code>/</code> and must be a number followed by
+            an optional suffix. They are interpreted as seconds by default,
+            unless you add a suffix:
+            <code>s</code> - seconds, <code>m</code> - minutes,
+            <code>h</code> - hours, <code>d</code> - days.</dd>
+        <dt><code>120s 120</code> is displayed as two buttons with the label <code>120s</code> and <code>2m</code></dt>
+        <dd>Both definitions create a button with a 120 seconds timeout, however
+            if you use a suffix, then the definition is used as button label
+            directly, otherwise the label is automatically created based on the
+            time.</dd>
+    </dl>
+    
+    <h3><a name="inline-commands">Format 2: Inline-Commands</a></h3>
+    <p>You can define commands directly in the setting, without having to add
+        them as a named Custom Command first. The syntax for this is:</p>
+    
+    <p><code>&lt;label with spaces&gt;=&lt;what the command should do&gt;</code></p>
+    
+    <p>Note that as opposed to Custom Command names the label may contain spaces,
+        and for that purpose the separating character is an equals sign <code>=</code>.
+        The label may not contain an equals sign itself. Example:</p>
+    
+    <p><code>Warn User=$$1: Plz no spammerino</code></p>
+    
+    <p>As with Custom Commands, the <code>&lt;what the command should do&gt;</code>
+        part can contain <a href="#replacements">replacements</a> using
+        identifiers for the current <a href="#parameters-context">context</a>.</p>
+    
+    <h3><a name="submenus">Format 3: Submenus</a></h3>
+    <p>Any line starting with <code>@</code> defines a custom submenu. Any
+        following lines that start with a dot <code>.</code> will then be put in
+        that menu (both command name lists and inline commands). For example:</p>
+    
+    <div class="codeblock"><pre>
+@Rules
+./No_Spam /No_Spoilers
+.Spoiler=/timeout $$1 600 no spoilers
+</pre></div>
+    
+    <p>For <strong>Context Menus</strong> you can add submenus with custom names
+        (only 1 level though), or even add entries to existing submenus by
+        specifying the name (for example <code>@Twitch Stream</code>).</p>
+    
+    <p>For <strong>User Dialog Buttons</strong> there are no named submenus,
+        however this notation can be used to put the buttons in separate rows.
+        Any submenu name starting with <code>a</code> will create a row on the
+        top, all other ones on the bottom. The menu name <code>a1</code> is the
+        default for buttons that don't have a menu defined, and <code>b1</code>
+        is the default for the <code>//Command</code> notation. Example:</p>
+    
+    <div class="codeblock"><pre>
+/Ban /Unban
+@a1
+.Spoiler=/timeout $$1 600 no spoilers
+@a2
+.5s[1] 2m[2] 10m[3] 30m[4]
+@b1
+./Slap
+</pre></div>
+    
+    <p>In this case the <code>Ban</code> and <code>Unban</code> commands are in
+        the default <code>a1</code> row, which means they are in the same row as
+        the <code>Spoiler</code> button (these are just different ways of
+        writing it). This also adds a second top row <code>a2</code> for the
+        timeout buttons as well as a single bottom row for the <code>Slap</code>
+        command.</p>
+    
+    
+    <h3><a name="separators">Separators</a></h3>
+    <p>In <strong>Context menus</strong> you can add separators between entries.
+        When you use a <a href="#commands-list">commands list</a>, you can add
+        a vertical bar (<code>|</code>) between entries.</p>
+    
+    <p>You can also add a separator by adding a single dash (<code>-</code>) on
+        it's own line.</p>
+    
+    <p>Example (separator before <code>Timeout</code> menu, before <code>Message</code>
+        and before <code>Vods</code>):</p>
+    <div class="codeblock"><pre>
+/Ban /Purge
+-
+@Timeout
+.5s 10m
+-
+/Message /Report | /Vods
+</pre></div>
+    
+    <h3><a name="shortcuts">Shortcuts</a></h3>
+    <p>You can add a shortcut to the end of a label or command name by enclosing
+        it with <code>[ ]</code> (square brackets):</p>
+    
+    <p><code>/Ban[B]</code> or <code>Spoiler[S]=/timeout $$1 ..</code>
+        (depending on the line format)</p>
+    
+    <p>For <strong>User Dialog Buttons</strong> those can be used while the
+        dialog is open and focused. They are interpreted by
+        <a href="https://docs.oracle.com/javase/7/docs/api/javax/swing/KeyStroke.html#getKeyStroke%28java.lang.String%29">getKeyStroke()</a>
+        which means anything that function understands can be used. However
+        spaces are not allowed, so a plus sign <code>+</code> can be used instead.
+        Examples: <code>alt+Q</code>, <code>shift+1</code>, <code>INSERT</code></p>
+    
+    <p><em>Note:</em> The lowercase/uppercase matters for it to be parsed
+        correctly.</p>
+    
+    <p>Adding a vertical bar <code>|</code> after the shortcut will use the text
+        after it as label for the shortcut on the button (no spaces allowed). If
+        you include the <code>|</code> but don't specify any text, then no label
+        will be displayed for that shortcut:</p>
+    
+    <p><code>/Slap[NUMPAD1|Np1] /Permit[NUMPAD2|]</code></p>
+    
+    <p>For the User Dialog Buttons you can also include the string
+        <code>nokeylabels</code> anywhere in the setting, which removes any
+        labels for the shortcuts, unless they are explicitly defined.</p>
+    
+    <p>For <strong>Context Menus</strong> a single character can be used as a
+        Mnemonic, for quick access to menu entries. For this purpose, submenus
+        may also contain the same syntax: <code>@Rules[R]</code> (which would
+        allow you to open that submenu by pressing R on your keyboard when the
+        context menu is open).</p>
+    
+    
+    <h3><a name="positioning">Positioning</a></h3>
+    <p>You can define an absolute position in the menu the entry should appear
+        at by enclosing it with <code>{ }</code> (curly brackets) at the end of
+        the label or command name (but before a shortcut if there is any):</p>
+    
+    <p><code>Mention{1}=/insertword $$1: \</code></p>
+    
+    <p>This will put the <code>Mention</code> menu entry at the <em>second</em>
+        position in the menu (counting starts from 0).</p>
+    
+    <p>Another example:</p>
+    
+    <div class="codeblock"><pre>
+@Twitch Stream[s]
+.Videos{2}[v]=/openUrlPrompt https://www.twitch.tv/$$1/videos/past-broadcasts
+@Important{0}
+.Slap=/me slaps $$1 around a bit with a large trout
+@Really Important{0}
+.FAQ=FAQ: https://pastebin.com/KySx3KDu
+</pre></div>
+
+    <p>This puts the <code>Videos</code> entry into the pre-defined
+        <code>Twitch Stream</code> submenu at the third position in the submenu
+        (also adding the accelerator key <code>s</code> to the menu and
+        <code>v</code> to the entry).</p>
+    
+    <p>It also adds the <code>Important</code> submenu at the first position
+        (since it hasn't been added yet) and after that adds the
+        <code>Really Important</code> submenu at the first position as well,
+        moving down <code>Important</code>. This demonstrates that the
+        positioning is based on the current state of the menu, so it can matter
+        <em>when</em> you add entries with absolute positioning.</p>
+    
+    <h3><a name="special-commands">Special Commands</a></h3>
+    
+    <p>In the User Dialog Buttons setting you can use some special commands:</p>
+    <ul>
+        <li>Add the command <code>/modunmod</code> to ada a <strong>Mod/Unmod-Button</strong>
+            which automatically changes depending on the selected user and
+            whether you are the broadcaster on the channel (so the button
+            doesn't always show up).</li>
+        <li>The commands <code>/Automod_approve</code> and <code>/Automod_deny</code>
+            only appear as buttons when you opened the User Dialog by clicking
+            on the username of a message rejected by AutoMod.</li>
+    </ul>
+    
+    <p>To make use of these you only need to enter the command, you don't need
+        any parameters (Chatty will take care of that). For example simply add
+        <code>/Modunmod</code> or <code>Approve=/Automod_approve</code> to add
+        it to the layout (using the syntax shown on this help page). Chatty will
+        then recognize the command names and the buttons will only show up when
+        they are needed.</p>
+</body>
+</html>
+

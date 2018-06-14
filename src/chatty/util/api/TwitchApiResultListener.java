@@ -1,0 +1,55 @@
+
+package chatty.util.api;
+
+import chatty.Room;
+import chatty.util.api.usericons.Usericon;
+import chatty.util.api.TwitchApi.RequestResultCode;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Interface definition for API response results.
+ * 
+ * @author tduva
+ */
+public interface TwitchApiResultListener {
+    void receivedEmoticons(Set<Emoticon> emoticons);
+    void receivedCheerEmoticons(Set<CheerEmoticon> emoticons);
+    void receivedUsericons(List<Usericon> icons);
+    void tokenVerified(String token, TokenInfo tokenInfo);
+    void runCommercialResult(String stream, String text, RequestResultCode result);
+    void putChannelInfoResult(RequestResultCode result);
+    void receivedChannelInfo(String channel, ChannelInfo info, RequestResultCode result);
+    void accessDenied();
+    void receivedFollowers(FollowerInfo followerInfo);
+    void newFollowers(FollowerInfo followerInfo);
+    void receivedSubscribers(FollowerInfo info);
+    
+    /**
+     * The correctly capitalized name for a user.
+     * 
+     * @param name All-lowercase name
+     * @param displayName Correctly capitalized name
+     */
+    void receivedDisplayName(String name, String displayName);
+    
+    void receivedServer(String channel, String server);
+    
+    /**
+     * Info retrieved from chat properties.
+     * 
+     * @param chatInfo Can be null if an error occured
+     */
+    void receivedChatInfo(ChatInfo chatInfo);
+    
+    /**
+     * Human-readable result message.
+     * 
+     * @param message 
+     */
+    void followResult(String message);
+    
+    void autoModResult(String result, String msgId);
+    
+    void roomsInfo(RoomsInfo info);
+}

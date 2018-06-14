@@ -1,0 +1,19 @@
+CHANGELOG 
+Mod4You Chatty Client
+
+Version 1.0 - 26.05.2018
+* Added Mod4You Archive Button in UserInfo
+* Added various buttons in MainPane (some only Useable as Mod4You Member)
+
+Version 1.0.1 - 27.05.2018
+* Changed Layout of Buttons to prevent unintentional ChatClear
+
+Version 1.1 - 30.05.2018
+* Added Username Change Button in UserInfo
+* Added Mod4You Coins Check in UserInfo
+
+
+Copyright 
+Chatty and recklessGreed
+http://chatty.github.io/
+recklessGreed.de
