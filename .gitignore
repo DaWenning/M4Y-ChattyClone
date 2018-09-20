@@ -10,3 +10,6 @@ META-INF/
 .gradle
 .nb-gradle
 build.xml
+**/img/*
+**/cache/*
+**/backup/*
