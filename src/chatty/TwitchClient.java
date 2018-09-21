@@ -5,6 +5,7 @@ import chatty.ChannelFavorites.Favorite;
 import chatty.lang.Language;
 import chatty.gui.colors.UsercolorManager;
 import chatty.gui.components.admin.StatusHistory;
+import chatty.util.*;
 import chatty.util.commands.CustomCommands;
 import chatty.util.api.usericons.Usericon;
 import chatty.util.api.usericons.UsericonManager;
@@ -21,26 +22,10 @@ import chatty.WhisperManager.WhisperListener;
 import chatty.gui.GuiUtil;
 import chatty.gui.LaF;
 import chatty.gui.MainGui;
-import chatty.util.BTTVEmotes;
-import chatty.util.BotNameManager;
-import chatty.util.DateTime;
-import chatty.util.EmoticonListener;
 import chatty.util.ffz.FrankerFaceZ;
 import chatty.util.ffz.FrankerFaceZListener;
-import chatty.util.ImageCache;
-import chatty.util.LogUtil;
-import chatty.util.MiscUtil;
-import chatty.util.OtherBadges;
-import chatty.util.ProcessManager;
-import chatty.util.RawMessageTest;
-import chatty.util.Speedruncom;
-import chatty.util.StreamHighlightHelper;
-import chatty.util.StreamStatusWriter;
-import chatty.util.StringUtil;
-import chatty.util.TwitchEmotes;
 import chatty.util.TwitchEmotes.EmotesetInfo;
 import chatty.util.TwitchEmotes.TwitchEmotesListener;
-import chatty.util.Webserver;
 import chatty.util.api.AutoModCommandHelper;
 import chatty.util.api.ChatInfo;
 import chatty.util.api.CheerEmoticon;
@@ -774,6 +759,7 @@ public class TwitchClient {
      * sending a message as well
      */
     private void sendMessage(String channel, String text, boolean allowCommandMessageLocally) {
+        text = Chatty.spellchecker.rewrite(text);
         if (c.sendSpamProtectedMessage(channel, text, false)) {
             User user = c.localUserJoined(channel);
             g.printMessage(user, text, false, null, 0);

@@ -1,10 +1,8 @@
 
 package chatty;
 
-import chatty.util.DateTime;
-import chatty.util.LogUtil;
-import chatty.util.MiscUtil;
-import chatty.util.SingleInstance;
+import chatty.util.*;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,7 +87,13 @@ public class Chatty {
      * -cd parameter was used, or the directory specified with the -d parameter.
      */
     private static String settingsDir = null;
-    
+
+
+    /**
+     * Automatic case and spelling check Map
+     */
+    public static SpellChecker spellchecker = null;
+
     /**
      * Parse the commandline arguments and start the actual chat client.
      * 
@@ -97,6 +101,7 @@ public class Chatty {
      */
     public static void main(String[] args) {
         Map<String, String> parsedArgs = MiscUtil.parseArgs(args);
+        spellchecker = new SpellChecker();
         
         /**
          * Continue only if single instance mode isn't enabled or registering
