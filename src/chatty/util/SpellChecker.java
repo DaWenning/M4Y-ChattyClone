@@ -15,6 +15,12 @@ public class SpellChecker {
 
     public SpellChecker() {
         //Read from spellchecker in settings file
+        readSpellingFile();
+
+        //JOptionPane.showMessageDialog(null, "Spelling eingelesen", "Spelling eingelesen", JOptionPane.INFORMATION_MESSAGE);
+    }
+    public void readSpellingFile() {
+        spelling = new HashMap<>();
         try {
             String filepath = Chatty.getUserDataDirectory() + "spelling";
             Files.lines(new File(filepath).toPath()).forEach(s -> addToMap(s));
@@ -23,8 +29,6 @@ public class SpellChecker {
             JOptionPane.showMessageDialog(null, "Es ist ein Fehler beim Spell Check einlesen passiert", "Spell Check Fehler", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        //JOptionPane.showMessageDialog(null, "Spelling eingelesen", "Spelling eingelesen", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void addToMap(String string) {

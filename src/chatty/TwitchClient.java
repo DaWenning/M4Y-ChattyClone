@@ -47,6 +47,8 @@ import chatty.util.commands.Parameters;
 import chatty.util.settings.Settings;
 import chatty.util.settings.SettingsListener;
 import chatty.util.srl.SpeedrunsLive;
+import sun.rmi.rmic.Main;
+
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
@@ -1080,6 +1082,12 @@ public class TwitchClient {
         }
         else if (command.equals("proc")) {
             g.printSystem("[Proc] "+ProcessManager.command(parameter));
+        }
+        else if (command.equals("info")) {
+            g.openUserInfoDialog(new User(parameter, room), null, null);
+        }
+        else if (command.equals("readspelling")) {
+            Chatty.spellchecker.readSpellingFile();
         }
         
         else if (c.command(channel, command, parameter, msgId)) {

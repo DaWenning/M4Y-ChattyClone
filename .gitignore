@@ -1,5 +1,3 @@
-build/
-!build/releases
 dist/
 nbproject/
 working_directory/
@@ -13,3 +11,13 @@ build.xml
 **/img/*
 **/cache/*
 **/backup/*
+**/debuglogs/*
+**/logs/*
+build/releases/Neuer\ Ordner
+build/reports
+build/resources
+build/test-results
+build/tmp
+build/classes
+build/libs
+local.properties
