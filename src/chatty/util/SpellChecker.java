@@ -24,10 +24,12 @@ public class SpellChecker {
             return;
         }
 
-        JOptionPane.showMessageDialog(null, "Spelling eingelesen", "Spelling eingelesen", JOptionPane.INFORMATION_MESSAGE);
+        //JOptionPane.showMessageDialog(null, "Spelling eingelesen", "Spelling eingelesen", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void addToMap(String string) {
+        System.out.println(string);
+        if (string.trim().contains("#") || string.trim().isEmpty()) return;
         String[] split = string.split(";");
         spelling.put(split[0], split[1]);
     }
@@ -39,8 +41,11 @@ public class SpellChecker {
 
         for (int i = 0; i < split.length; i++){
             String s = split[i];
-            if (spelling.keySet().contains(s)){
-                split[i] = spelling.get(s);
+            for (String pattern : spelling.keySet()) {
+                if (s.matches(pattern)) {
+                    split[i] = spelling.get(pattern);
+                    break;
+                }
             }
         }
 

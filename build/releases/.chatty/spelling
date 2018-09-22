@@ -1,17 +1,12 @@
 # ZanderLP
-zanderSmile;zanderLachen
-zandersmile;zanderLachen
-zanderlachen;zanderLachen
-zanderGG;zanderGeGe
-zandergg;zanderGeGe
+[Zz]ander([Ss]mile|[Ll]achen);zanderLachen
+[Zz]ander([Gg][Ee]?){2};zanderGeGe
 # Allgemein
-kappa;Kappa
-kappahd;KappaHD
-kappaHd;KappaHD
-kappaHD;KappaHD
-KappaHd;KappaHD
-KappahD;KappaHD
-mod4you;Mod4You
-dansgame;DansGame
-Dansgame;DansGame
-dansGame;dansgame
+[Kk]appa;Kappa
+[Kk]appa[Hh][Dd];KappaHD
+[Mm]od4[Yy]ou;Mod4You
+[Dd]ans[Gg]ame;DansGame
+[Hh]ey[Gg]uys;HeyGuys
+[Nn]ot[Ll]ike[Tt]his;NotLikeThis
+
+
