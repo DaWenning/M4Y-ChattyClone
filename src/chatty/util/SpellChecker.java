@@ -23,6 +23,12 @@ public class SpellChecker {
         spelling = new HashMap<>();
         try {
             String filepath = Chatty.getUserDataDirectory() + "spelling";
+            File spelling = new File(filepath);
+            if (!spelling.exists()) {
+                filepath += "txt";
+                spelling = new File(filepath);
+                if (!spelling.exists()) return;
+            }
             Files.lines(new File(filepath).toPath()).forEach(s -> addToMap(s));
         }
         catch (IOException IO_exception) {
