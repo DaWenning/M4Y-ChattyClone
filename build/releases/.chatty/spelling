@@ -2,11 +2,12 @@
 [Zz]ander([Ss]mile|[Ll]achen);zanderLachen
 [Zz]ander([Gg][Ee]?){2};zanderGeGe
 # Allgemein
-[Kk]appa;Kappa
-[Kk]appa[Hh][Dd];KappaHD
+[Kk]ap{1,2}a?;Kappa
+[Kk]ap{1,2}a?[Hh][Dd];KappaHD
 [Mm]od4[Yy]ou;Mod4You
 [Dd]ans[Gg]ame;DansGame
 [Hh]ey[Gg]uys;HeyGuys
 [Nn]ot[Ll]ike[Tt]his;NotLikeThis
+[Ff]eels[Bb]ad[Mm]an;FeelsBadMan
 
 
