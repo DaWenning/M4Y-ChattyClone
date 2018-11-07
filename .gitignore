@@ -21,3 +21,11 @@ build/tmp
 build/classes
 build/libs
 local.properties
+build/javapackager/
+build/releases/.chatty/spelling - Kopie
+build/releases/Chatty_0.9.2b1_win_standalone.zip
+build/releases/Chatty_0.9.2b1_win_standalone/
+build/releases/Mod4You_Chatty_V1_1/Mod4You_Chatty_V1_1.zip
+build/releases/Mod4You_Chatty_V1_2/Mod4You_Chatty_V1_2.zip
+build/releases/Mod4You_Chatty_V1_2/changelog.txt
+build/releases/Mod4You_Chatty_V1_2/spelling
