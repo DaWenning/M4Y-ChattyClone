@@ -3,6 +3,8 @@
 [Zz]ander([Gg][Ee]?){2};zanderGeGe
 [Zz]ander[Cc]at;zanderWhat
 [Zz]ander([Ww]h?at|[Ff]los{1,2}e);zanderFlosse
+# Earliboy 
+[Ee]arli([Nn][Aa]?){2};earliNana
 # Allgemein
 [Kk]ap{1,2}a?;Kappa
 [Kk]ap{1,2}a?[Hh][Dd];KappaHD
@@ -11,6 +13,7 @@
 [Hh]ey[Gg]uys;HeyGuys
 [Nn]ot[Ll]ike[Tt]his;NotLikeThis
 [Ff]eels[Bb]ad[Mm]an;FeelsBadMan
+# Common Mistakes
 sleber;selber
 
 
