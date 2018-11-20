@@ -2,7 +2,7 @@
 [Zz]ander([Ss]mile|[Ll]achen);zanderLachen
 [Zz]ander([Gg][Ee]?){2};zanderGeGe
 [Zz]ander[Cc]at;zanderWhat
-[Zz]ander([Ww]h?at|[Ff]los{1,2}e);zanderFlosse
+[Zz]ander[Ss]am;zanderSam
 # Earliboy 
 [Ee]arli([Nn][Aa]?){2};earliNana
 # Allgemein
@@ -15,5 +15,8 @@
 [Ff]eels[Bb]ad[Mm]an;FeelsBadMan
 # Common Mistakes
 sleber;selber
+glit;glit
+KOrrektur;Korrektur
+
 
 
