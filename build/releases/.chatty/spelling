@@ -1,7 +1,7 @@
 # ZanderLP
 [Zz]ander([Ss]mile|[Ll]achen);zanderLachen
 [Zz]ander([Gg][Ee]?){2};zanderGeGe
-[Zz]ander[Cc]at;zanderWhat
+[Zz]ander?([Cc]|[Ww][Hh])at;zanderWhat
 [Zz]ander[Ss]am;zanderSam
 # Earliboy 
 [Ee]arli([Nn][Aa]?){2};earliNana
@@ -17,6 +17,8 @@
 sleber;selber
 glit;glit
 KOrrektur;Korrektur
-
+!hyoe;!hype
+/hyoe;/hype
+[Ff]ort[Oo]ne;FortOne
 
 
