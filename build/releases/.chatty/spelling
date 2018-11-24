@@ -1,10 +1,17 @@
 # ZanderLP
-[Zz]ander([Ss]mile|[Ll]achen);zanderLachen
+#[Zz]ander([Ss]mile|[Ll]achen);zanderLachen
 [Zz]ander([Gg][Ee]?){2};zanderGeGe
 [Zz]ander?([Cc]|[Ww][Hh])at;zanderWhat
-[Zz]ander[Ss]am;zanderSam
+[Zz]ander([Ss]am|[Dd]og);zanderSam
+[Zz]ander[Ss]mart;zanderSmart
+[Zz]ander[Ff]oss?e;zanderFlosse
+[Zz]ander[Zz];zanderZ
+[Zz]ander[Ww]ut;zanderWut
+[Zz]ander[Hh]ype;zanderHype
 # Earliboy 
 [Ee]arli([Nn][Aa]?){2};earliNana
+# Keizaron
+[Kk]eiza[Ll][Uu][Ll];keizaLUL
 # Allgemein
 [Kk]ap{1,2}a?;Kappa
 [Kk]ap{1,2}a?[Hh][Dd];KappaHD
@@ -13,12 +20,11 @@
 [Hh]ey[Gg]uys;HeyGuys
 [Nn]ot[Ll]ike[Tt]his;NotLikeThis
 [Ff]eels[Bb]ad[Mm]an;FeelsBadMan
+[Rr]esident[Ss]lee?pe?r;ResidentSleeper
 # Common Mistakes
 sleber;selber
 glit;glit
 KOrrektur;Korrektur
-!hyoe;!hype
-/hyoe;/hype
+!hyoe?;!hype
+/hyoe?;/hype
 [Ff]ort[Oo]ne;FortOne
-
-
