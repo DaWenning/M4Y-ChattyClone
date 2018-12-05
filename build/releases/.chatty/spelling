@@ -4,24 +4,31 @@ a?[Zz]a?nder([Gg][Ee]?){2};zanderGeGe
 a?[Zz]a?nder?([Cc]|[Ww][Hh])at;zanderWhat
 a?[Zz]a?nder([Ss]am|[Dd]og);zanderSam
 a?[Zz]a?nder[Ss]mart;zanderSmart
-a?[Zz]a?nder[Ff]oss?e;zanderFlosse
+a?[Zz]a?nder[Ff]loss?e;zanderFlosse
 a?[Zz]a?nder[Zz];zanderZ
 a?[Zz]a?nder[Ww]ut;zanderWut
 a?[Zz]a?nder[Hh]ype;zanderHype
+a?[Zz]a?nder[Hh][Ii];zanderHi
+a?[Zz]a?nder[Aa]im;zanderAim
+a?[Zz]a?nder[Oo]{1,2}[Ff];zanderOof
+a?[Zz]a?nder[Ll](ov|vo)e;zanderLove
 # Earliboy 
 [Ee]arli([Nn][Aa]?){2};earliNana
 # Keizaron
 [Kk]eiza[Ll][Uu][Ll];keizaLUL
+# Nessy
+[Dd]ie[Nn]es{1,2}[Ll]ove;dienesLove
 # Allgemein
-[Kk]ap{1,2}a?;Kappa
-[Kk]ap{1,2}a?[Hh][Dd];KappaHD
+[Kk]ap{1,2}a?p?;Kappa
+[Kk]ap{1,2}a?p?[HhJj][Dd];KappaHD
 [Mm]od4[Yy]ou;Mod4You
 [Dd]ans[Gg]ame;DansGame
 [Hh]ey[Gg]uys;HeyGuys
 [Nn]ot[Ll]ike[Tt]his;NotLikeThis
-[Ff]eels[Bb]ad[Mm]an;FeelsBadMan
+[Ff][Ee]{1,2}ls[Bb]ad[Mm]an;FeelsBadMan
 [Rr]esident[Ss]lee?pe?r;ResidentSleeper
 [Ll][Uu][Ll];LUL
+[Pp]og[Cc]hamp;PogChamp
 # Common Mistakes
 sleber;selber
 glit;glit
@@ -30,7 +37,14 @@ KOrrektur;Korrektur
 /hyoe?;/hype
 [Ff]ort[Oo]ne;FortOne
 bestlel;bestell
-essne;essne
+essne;essen
 Vorsihct;Vorsicht
 n(chi|cih)t;nicht
 shcon;schon
+schnelelr;schneller
+schnlel;schnell 
+meisnt;meinst
+<[42];<3
+Dnake;Danke
+dnake;danke
+
