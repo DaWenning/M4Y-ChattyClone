@@ -1,11 +1,6 @@
 
 package chatty.gui.components.textpane;
 
-import chatty.util.Debugging;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Rectangle;
-import java.awt.Shape;
 import javax.swing.text.BoxView;
 import javax.swing.text.Element;
 
@@ -24,35 +19,17 @@ class ChatBoxView extends BoxView {
     }
     
     // For testing
-    private int layouts = 0;
-    
-    @Override
-    protected void layout(int width, int height) {
-        if (Debugging.isEnabled("layout")) {
-            long start = System.currentTimeMillis();
-            super.layout(width, height);
-            long duration = System.currentTimeMillis() - start;
-            if (duration > 1) {
-                layouts++;
-                Debugging.println("layout "+duration + " " + layouts);
-            }
-        } else {
-            super.layout(width, height);
-        }
-    }
-
+//    private int layouts = 0;
+//    
 //    @Override
-//    public void paint(Graphics g, Shape a) {
-//        if (g.getClipBounds().width == 35) {
-//            //System.out.println(g.getClip()+" "+a);
+//    protected void layout(int width, int height) {
+//        long start=System.currentTimeMillis();
+//        super.layout(width, height);
+//        long duration =System.currentTimeMillis() - start;
+//        if (duration > 1) {
+//            layouts++;
+//            System.out.println(duration+" "+layouts);
 //        }
-////        Rectangle c = g.getClipBounds();
-////        Rectangle r = a.getBounds();
-////        if (r.contains(c)) {
-////            g.setColor(Color.gray);
-////            //g.fillRect(c.x, c.y, c.width, c.height);
-////        }
-//        super.paint(g, a);
 //    }
     
     @Override
@@ -63,6 +40,7 @@ class ChatBoxView extends BoxView {
             int offset = 0;
 
             for (int i = 0; i < spans.length; i++) {
+
                 textBlockHeight += spans[i];
             }
             offset = (targetSpan - textBlockHeight);
@@ -72,4 +50,4 @@ class ChatBoxView extends BoxView {
             }
         }
     }
-}
+}   

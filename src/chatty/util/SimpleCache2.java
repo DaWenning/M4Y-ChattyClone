@@ -132,6 +132,7 @@ public class SimpleCache2 {
             pendingRefresh = true;
             List<String> lines = refreshLinesCallback.get();
             boolean valid = handleLinesCallback.apply(lines);
+            System.out.println(valid+" "+loadSuccess);
             if (valid) {
                 saveToFile(lines);
                 loadSuccess = true;

@@ -12,11 +12,13 @@ import chatty.gui.components.textpane.ChannelTextPane;
 import chatty.gui.components.textpane.Message;
 import chatty.util.StringUtil;
 import chatty.util.api.Emoticon;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,24 +26,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import javax.swing.AbstractAction;
-import javax.swing.InputMap;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -62,6 +53,8 @@ public class Channel extends JPanel {
     private final ChannelTextPane text;
     private final UserList users;
     private final JSplitPane mainPane;
+    private final JSplitPane chatPane;
+    //private final JSplitPane buttonPane;
     private final JScrollPane userlist;
     private final JScrollPane west;
     private final StyleServer styleManager;
@@ -115,6 +108,8 @@ public class Channel extends JPanel {
         mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,west,userlist);
         mainPane.setResizeWeight(1);
         mainPane.setDividerSize(DIVIDER_SIZE);
+
+
         
         // Text input
         input = new ChannelEditBox(40);
@@ -124,9 +119,126 @@ public class Channel extends JPanel {
         input.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), "-");
         input.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), "-");
 
+        // Buttons under Stream
+        JButton timer_list = new JButton("!timer list");
+        JButton clearChat  = new JButton("/clear");
+        JButton uptime = new JButton("!uptime");
+        JButton coininfo = new JButton("!coininfo");
+        JButton prime = new JButton("!prime");
+        JButton mod = new JButton("!mod");
+
+        JButton commands = new JButton("Kommandos");
+
+        timer_list.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        sendText("!timer list");
+                    }
+                }
+        );
+        timer_list.setPreferredSize(new Dimension(90,30));
+
+        clearChat.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        sendText("/clear");
+                    }
+                }
+        );
+        clearChat.setPreferredSize(new Dimension(90,30));
+
+        uptime.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        sendText("!uptime");
+                    }
+                }
+        );
+        uptime.setPreferredSize(new Dimension(90,30));
+
+        coininfo.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        sendText("!coininfo");
+                    }
+                }
+        );
+        coininfo.setPreferredSize(new Dimension(90,30));
+
+        prime.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        sendText("!prime");
+                    }
+                }
+        );
+        prime.setPreferredSize(new Dimension(90,30));
+
+        mod.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        sendText("!mod");
+                    }
+                }
+        );
+        mod.setPreferredSize(new Dimension(90,30));
+
+        commands.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent event) {
+                        try {
+                            String channel = main.channels.getActiveChannel().getChannel().replace("#","");
+                            Desktop.getDesktop().browse(new URL("https://panel.mod4you.tv/streamer/"+channel+"/commands/").toURI());
+                        } catch (Exception ex) {}
+                    }
+                }
+        );
+        commands.setPreferredSize(new Dimension(90,30));
+
+        // Chat Split Pane
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(timer_list, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        panel.add(uptime, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        panel.add(coininfo, gbc);
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        panel.add(prime, gbc);
+        gbc.gridx = 4;
+        gbc.gridy = 0;
+        panel.add(mod, gbc);
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(clearChat, gbc);
+        gbc.gridwidth = 2;
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        panel.add(commands, gbc);
+
+        chatPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, input, panel);
+        chatPane.setResizeWeight(1);
+        chatPane.setDividerSize(DIVIDER_SIZE);
+
         // Add components
         add(mainPane, BorderLayout.CENTER);
-        add(input, BorderLayout.SOUTH);
+        add(chatPane, BorderLayout.SOUTH);
+
 
         input.requestFocusInWindow();
         setStyles();
@@ -254,18 +366,15 @@ public class Channel extends JPanel {
         
         private final Set<String> commands = new TreeSet<>(Arrays.asList(new String[]{
             "subscribers", "subscribersOff", "timeout", "ban", "unban", "host", "unhost", "raid", "unraid", "clear", "mods",
-            "part", "close", "reconnect", "slow", "slowOff", "r9k", "r9koff", "emoteOnly", "emoteOnlyOff",
-            "connection", "uptime", "appInfo", "releaseInfo",
-            "dir", "wdir", "openDir", "openWdir",
-            "showBackupDir", "openBackupDir", "showDebugDir", "openDebugDir",
-            "showTempDir", "openTempDir", "showJavaDir", "openJavaDir",
-            "clearChat", "refresh", "changeToken", "testNotification", "server",
+            "part", "close", "reconnect", "slow", "slowOff", "r9k", "r9koff", "emoteonly", "emoteonlyoff",
+            "connection", "uptime", "dir", "wdir", "openDir", "openWdir", "releaseInfo", "openBackupDir",
+            "clearChat", "refresh", "changetoken", "testNotification", "server",
             "set", "add", "clearSetting", "remove", "customCompletion",
             "clearStreamChat", "getStreamChatSize", "setStreamChatSize", "streamChatTest", "openStreamChat",
             "customEmotes", "reloadCustomEmotes", "addStreamHighlight", "openStreamHighlights",
             "ignore", "unignore", "ignoreWhisper", "unignoreWhisper", "ignoreChat", "unignoreChat",
             "follow", "unfollow", "ffzws", "followers", "followersoff",
-            "setcolor", "untimeout", "userinfo", "joinHosted", "favorite", "unfavorite"
+            "setcolor", "untimeout", "userinfo", "joinhosted", "favorite", "unfavorite"
         }));
         
         private final Set<String> prefixesPreferUsernames = new HashSet<>(Arrays.asList(new String[]{
@@ -310,8 +419,8 @@ public class Channel extends JPanel {
                 //--------------
                 // Setting Names
                 //--------------
-                input.setCompleteToCommonPrefix(true);
                 items = filterCompletionItems(main.getSettingNames(), search);
+                input.setCompleteToCommonPrefix(true);
             } else if (prefix.equals("/")) {
                 //--------------
                 // Command Names
@@ -409,66 +518,34 @@ public class Channel extends JPanel {
             Map<String, String> info = new HashMap<>();
             // Get font height for correct display size of Emoji
             int height = input.getFontMetrics(input.getFont()).getHeight();
-            Collection<Emoticon> searchResult = new LinkedHashSet<>();
-            findEmoji(searchResult, code -> code.startsWith(":"+search));
-            if (searchResult.size() < 20) {
-                findEmoji(searchResult, code -> code.contains("_"+search));
-            }
-            for (Emoticon emote : searchResult) {
-                if (main.getSettings().getBoolean("emojiReplace")) {
-                    result.add(emote.stringId);
-                    info.put(emote.stringId, "<img width='" + height + "' height='" + height + "' src='" + emote.url + "'/>");
-                } else {
-                    result.add(emote.code);
-                    info.put(emote.code, emote.stringId + " <img width='" + height + "' height='" + height + "' src='" + emote.url + "'/>");
+            for (Emoticon emote : main.emoticons.getEmoji()) {
+                if (emote.stringId != null
+                        && (emote.stringId.startsWith(":"+search)
+                            || (search.length() > 3 && emote.stringId.contains(search)))) {
+                    if (main.getSettings().getBoolean("emojiReplace")) {
+                        result.add(emote.stringId);
+                        info.put(emote.stringId, "<img width='"+height+"' height='"+height+"' src='"+emote.url+"'/>");
+                    } else {
+                        result.add(emote.code);
+                        info.put(emote.code, emote.stringId+" <img width='"+height+"' height='"+height+"' src='"+emote.url+"'/>");
+                    }
                 }
             }
             return new CompletionItems(result, info, ":");
         }
         
-        private void findEmoji(Collection<Emoticon> result, Function<String, Boolean> matcher) {
-            for (Emoticon emote : main.emoticons.getEmoji()) {
-                if (emote.stringId != null && matcher.apply(emote.stringId)) {
-                    result.add(emote);
-                }
-            }
-        }
-        
-        /**
-         * Filter list of ready-to-use items based on the given search.
-         * 
-         * @param data
-         * @param search Should be all-lowercase
-         * @return 
-         */
         private List<String> filterCompletionItems(Collection<String> data,
                 String search) {
-            List<String> containing = new ArrayList<>();
             List<String> matched = new ArrayList<>();
-            Pattern cSearch = Pattern.compile(
-                    search.substring(0, 1).toUpperCase(Locale.ENGLISH)
-                    + "(?i)" + search.substring(1)
-            );
-            String searchMode = main.getSettings().getString("completionSearch");
-            for (String item : data) {
-                String lc = StringUtil.toLowerCase(item);
-                if (lc.startsWith(search)) {
-                    matched.add(item);
-                } else if (searchMode.equals("words") &&
-                        !input.getCompleteToCommonPrefix()
-                        && cSearch.matcher(item).find()) {
-                    containing.add(item);
-                } else if (searchMode.equals("anywhere")
-                        && lc.contains(search)) {
-                    containing.add(item);
+            for (String name : data) {
+                if (StringUtil.toLowerCase(name).startsWith(search)) {
+                    matched.add(name);
                 }
             }
-            Collections.sort(matched, String.CASE_INSENSITIVE_ORDER);
-            Collections.sort(containing, String.CASE_INSENSITIVE_ORDER);
-            matched.addAll(containing);
+            Collections.sort(matched);
             return matched;
         }
-        
+            
         private CompletionItems getCompletionItemsNames(String search, boolean preferUsernames) {
             List<User> matchedUsers = new ArrayList<>();
             Set<User> regularMatched = new HashSet<>();
@@ -802,5 +879,11 @@ public class Channel extends JPanel {
     public interface OnceOffEditListener {
         public void edited(String channel);
     }
-    
+
+
+    /* MOD 4 YOU EDITS */
+
+    private void sendText(String text) {
+        main.client.textInput(main.channels.getActiveChannel().getRoom(), text);
+    }
 }

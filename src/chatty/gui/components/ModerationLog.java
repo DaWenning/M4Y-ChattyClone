@@ -3,7 +3,6 @@ package chatty.gui.components;
 
 import chatty.gui.MainGui;
 import chatty.util.DateTime;
-import chatty.util.Debugging;
 import chatty.util.StringUtil;
 import chatty.util.api.pubsub.ModeratorActionData;
 import java.awt.BorderLayout;
@@ -29,7 +28,7 @@ import javax.swing.text.Element;
  */
 public class ModerationLog extends JDialog {
     
-    private static final int MAX_NUMBER_LINES = 100;
+    private static final int MAX_NUMBER_LINES = 1000;
     
     private final JTextArea log;
     private final JScrollPane scroll;
@@ -37,7 +36,6 @@ public class ModerationLog extends JDialog {
     private final Map<String, List<String>> cache = new HashMap<>();
     
     private String currentChannel;
-    private String currentLoadedChannel;
 
     public ModerationLog(MainGui owner) {
         super(owner);
@@ -70,16 +68,7 @@ public class ModerationLog extends JDialog {
             currentChannel = channel;
             setTitle("Moderation Actions ("+channel+")");
             
-            if (isVisible()) {
-                setDataToCurrent();
-            }
-        }
-    }
-        
-    private void setDataToCurrent() {
-        if (!currentChannel.equals(currentLoadedChannel)) {
-            currentLoadedChannel = currentChannel;
-            List<String> cached = cache.get(currentChannel);
+            List<String> cached = cache.get(channel);
             if (cached != null) {
                 StringBuilder b = new StringBuilder();
                 String linebreak = "";
@@ -108,17 +97,14 @@ public class ModerationLog extends JDialog {
                 data.moderation_action,
                 StringUtil.join(data.args," "));
         
-        if (channel.equals(currentLoadedChannel)) {
+        if (channel.equals(currentChannel)) {
             printLine(log, line);
         }
         
         if (!cache.containsKey(channel)) {
-            cache.put(channel, new ArrayList<>());
+            cache.put(channel, new ArrayList<String>());
         }
         cache.get(channel).add(line);
-        if (cache.get(channel).size() > MAX_NUMBER_LINES) {
-            cache.get(channel).remove(0);
-        }
     }
     
     private void printLine(JTextArea text, String line) {
@@ -185,6 +171,5 @@ public class ModerationLog extends JDialog {
     
     public void showDialog() {
         setVisible(true);
-        setDataToCurrent();
     }
 }

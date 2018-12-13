@@ -1,15 +1,11 @@
 
 package chatty;
 
-import chatty.splash.Splash;
-import chatty.util.DateTime;
-import chatty.util.LogUtil;
-import chatty.util.MiscUtil;
-import chatty.util.SingleInstance;
+import chatty.util.*;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.SwingUtilities;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -49,11 +45,11 @@ public class Chatty {
     public static final String REDIRECT_URI = "http://127.0.0.1:61324/token/";
     
     /**
-     * Version number of this version of Chatty, consisting of numbers separated
+     * Version number of this version of Chatty, consisting of numbers seperated
      * by points. May contain a single "b" for beta versions, which are counted
      * as older (so 0.8.7b4 is older than 0.8.7).
      */
-    public static final String VERSION = "0.9.3-ba2"; // Remember changing the version in the help
+    public static final String VERSION = "0.9.2b1";
     
     /**
      * Enable Version Checker (if you compile and distribute this yourself, you
@@ -70,6 +66,8 @@ public class Chatty {
      * For testing purposes.
      */
     public static final String VERSION_TEST_URL = "http://127.0.0.1/twitch/version.txt";
+    
+    public static final String COMPILE_INFO = "JDK8";
     
     /**
      * For use with the -single commandline argument, if no port is specified.
@@ -89,21 +87,21 @@ public class Chatty {
      * -cd parameter was used, or the directory specified with the -d parameter.
      */
     private static String settingsDir = null;
-    
-    private static String invalidSettingsDir = null;
-    
-    private static String[] args;
-    
+
+
+    /**
+     * Automatic case and spelling check Map
+     */
+    public static SpellChecker spellchecker = null;
+
     /**
      * Parse the commandline arguments and start the actual chat client.
      * 
      * @param args The commandline arguments.
      */
     public static void main(String[] args) {
-        
-        Chatty.args = args;
-        
         Map<String, String> parsedArgs = MiscUtil.parseArgs(args);
+        spellchecker = new SpellChecker();
         
         /**
          * Continue only if single instance mode isn't enabled or registering
@@ -124,14 +122,12 @@ public class Chatty {
         }
         if (parsedArgs.containsKey("d")) {
             String dir = parsedArgs.get("d");
-            File file = new File(dir).getAbsoluteFile();
+            File file = new File(dir);
             if (file.isDirectory()) {
                 settingsDir = file.toString();
-            } else {
-                invalidSettingsDir = file.toString();
             }
         }
-        
+
         final TwitchClient client = new TwitchClient(parsedArgs);
         
         // Adding listener just in case, will do nothing if not used
@@ -213,16 +209,6 @@ public class Chatty {
         return dir;
     }
     
-    /**
-     * If non-null, a settings directory that didn't exist was given with the
-     * -d commandline option.
-     * 
-     * @return 
-     */
-    public static String getInvalidSettingsDirectory() {
-        return invalidSettingsDir;
-    }
-    
     public static String getExportDirectory() {
         String dir = getUserDataDirectory()+"exported"+File.separator;
         new File(dir).mkdirs();
@@ -251,38 +237,19 @@ public class Chatty {
         return getUserDataDirectory()+"backup"+File.separator;
     }
     
-    public static String getTempDirectory() {
-        return System.getProperty("java.io.tmpdir");
-    }
-    
     public static String getDebugLogDirectory() {
         return getUserDataDirectory()+"debuglogs"+File.separator;
     }
     
     public static String chattyVersion() {
-        return String.format("Chatty Version %s%s%s",
+        return String.format("Chatty Version %s%s%s / %s",
                 Chatty.VERSION,
                 (Chatty.HOTKEY ? " Hotkey": ""),
-                (Chatty.DEBUG ? " (Debug)" : ""));
+                (Chatty.DEBUG ? " (Debug)" : ""),
+                COMPILE_INFO);
     }
     
     public static String uptime() {
         return DateTime.ago(STARTED_TIME);
     }
-    
-    public static String[] getArgs() {
-        return args;
-    }
-    
-    /**
-     * Only println when the DEBUG flag is enabled.
-     * 
-     * @param output 
-     */
-    public static void println(String output) {
-        if (Chatty.DEBUG) {
-            System.out.println(output);
-        }
-    }
-    
 }

@@ -2,7 +2,6 @@
 package chatty.gui.components;
 
 import chatty.gui.MainGui;
-import chatty.lang.Language;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,12 +19,12 @@ public class ConnectionDialog extends JDialog {
     private final JLabel passwordLabel = new JLabel("Access token:");
     private final JLabel name = new JLabel("");
     private final JTextField password = new JPasswordField(14);
-    private final JButton connect = new JButton(Language.getString("connect.button.connect"));
-    private final JButton cancel = new JButton(Language.getString("dialog.button.cancel"));
-    private final JButton favorites = new JButton(Language.getString("connect.button.favoritesHistory"));
+    private final JButton connect = new JButton("Connect");
+    private final JButton cancel = new JButton("Cancel");
+    private final JButton favorites = new JButton("Favorites / History");
     private final JTextField channel = new JTextField(16);
-    private final JButton getToken = new JButton();
-    private final JCheckBox rejoinOpenChannels = new JCheckBox(Language.getString("connect.button.rejoin"));
+    private final JButton getToken = new JButton("Configure login..");
+    private final JCheckBox rejoinOpenChannels = new JCheckBox("Rejoin open channels");
     
     private final GridBagConstraints passwordGc = makeGbc(1,1,2,1,GridBagConstraints.WEST);
     private final GridBagConstraints passwordLabelGc = makeGbc(0,1,1,1,GridBagConstraints.WEST);
@@ -33,7 +32,7 @@ public class ConnectionDialog extends JDialog {
     private String currentUsername = "";
     
     public ConnectionDialog(MainGui owner) {
-        super(owner, Language.getString("connect.title"), true);
+        super(owner,"Connect",true);
         this.setResizable(false);
         setLayout(new GridBagLayout());
 
@@ -52,7 +51,7 @@ public class ConnectionDialog extends JDialog {
         GridBagConstraints gbc;
         
         // Account
-        final JLabel nameLabel = new JLabel(Language.getString("connect.account"));
+        final JLabel nameLabel = new JLabel("Account:");
         add(nameLabel, makeGbc(0,0,1,1,GridBagConstraints.EAST));
         add(name, makeGbc(1,0,2,1,GridBagConstraints.WEST));
         
@@ -84,7 +83,7 @@ public class ConnectionDialog extends JDialog {
         });
         
         // Channels and Favorites
-        final JLabel channelLabel = new JLabel(Language.getString("connect.channel"));
+        final JLabel channelLabel = new JLabel("Channel:");
         add(channelLabel, makeGbc(0,4,1,1,GridBagConstraints.EAST));
 
         gbc = makeGbc(1,4,2,1,GridBagConstraints.WEST);
@@ -201,12 +200,12 @@ public class ConnectionDialog extends JDialog {
             remove(password);
             remove(passwordLabel);
             if (currentUsername.isEmpty() || currentToken.isEmpty()) {
-                name.setText(Language.getString("connect.none"));
-                getToken.setText(Language.getString("connect.button.createLogin"));
+                name.setText("<none>");
+                getToken.setText("Create login..");
             }
             else {
                 name.setText(currentUsername);
-                getToken.setText(Language.getString("connect.button.configureLogin"));
+                getToken.setText("Configure login..");
             }
         }
         pack();

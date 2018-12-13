@@ -1,7 +1,6 @@
 
 package chatty;
 
-import chatty.gui.components.updating.Version;
 import chatty.gui.HtmlColors;
 import chatty.gui.WindowStateManager;
 import chatty.gui.components.settings.NotificationSettings;
@@ -98,7 +97,6 @@ public class SettingsManager {
         settings.addLong("versionLastChecked", 0);
         settings.addString("updateAvailable", "");
         settings.addBoolean("checkNewVersion", true);
-        settings.addBoolean("checkNewBeta", false);
         settings.addBoolean("newsAutoRequest", true);
         settings.addLong("newsLastRead", 0);
         settings.addString("currentVersion", "");
@@ -130,7 +128,7 @@ public class SettingsManager {
         settings.addString("serverDefault", "irc.chat.twitch.tv");
         settings.addString("portDefault", "6697,6667,443,80");
 
-        // Separate settings for commandline/temp so others can be saved
+        // Seperate settings for commandline/temp so others can be saved
         settings.addString("server", "", false);
         settings.addString("port", "", false);
         
@@ -159,8 +157,20 @@ public class SettingsManager {
         settings.addBoolean("foreignToken", false);
         // Don't save setting, login with password isn't possible anymore
         settings.addBoolean("usePassword", false, false);
-        settings.addList("scopes", new HashSet<>(), Setting.STRING);
-        settings.setFile("scopes", loginFile);
+
+        // Token
+        settings.addBoolean("token_editor", false);
+        settings.setFile("token_editor", loginFile);
+        settings.addBoolean("token_commercials", false);
+        settings.setFile("token_commercials", loginFile);
+        settings.addBoolean("token_user", false);
+        settings.setFile("token_user", loginFile);
+        settings.addBoolean("token_subs", false);
+        settings.setFile("token_subs", loginFile);
+        settings.addBoolean("token_chat", false);
+        settings.setFile("token_chat", loginFile);
+        settings.addBoolean("token_follow", false);
+        settings.setFile("token_follow", loginFile);
 
         //=================
         // Appearance / GUI
@@ -181,8 +191,7 @@ public class SettingsManager {
         settings.addString("inputFont", "Dialog 14");
         settings.addString("userlistFont", "Dialog Bold 12");
         settings.addLong("lineSpacing", 2);
-        settings.addLong("paragraphSpacing", 8);
-        settings.addLong("bottomMargin", -1);
+        settings.addLong("paragraphSpacing", 6);
         settings.addString("timestamp","[HH:mm]");
         settings.addString("timestampTimezone", "");
         settings.addBoolean("capitalizedNames", true);
@@ -212,7 +221,7 @@ public class SettingsManager {
         settings.addBoolean("emojiReplace", true);
         settings.addString("cheersType", "static");
 
-        settings.addBoolean("usericonsEnabled", true);
+        settings.addBoolean("usericonsEnabled",true);
         
         settings.addList("customUsericons", new ArrayList(), Setting.LIST);
         settings.addBoolean("customUsericonsEnabled", false);
@@ -229,17 +238,11 @@ public class SettingsManager {
         // Colors
         settings.addString("foregroundColor","#111111");
         settings.addString("backgroundColor","#FAFAFA");
-        settings.addBoolean("alternateBackground", false);
-        settings.addString("backgroundColor2","#EAEAEA");
-        settings.addBoolean("messageSeparator", false);
-        settings.addString("separatorColor", "#DFDFDF");
         settings.addString("infoColor","#001480");
         settings.addString("compactColor","#A0A0A0");
         settings.addString("inputBackgroundColor","White");
         settings.addString("inputForegroundColor","Black");
-        settings.addString("highlightColor","#D10000");
-        settings.addBoolean("highlightBackground", true);
-        settings.addString("highlightBackgroundColor", "#FFFFEA");
+        settings.addString("highlightColor","Red");
         settings.addString("searchResultColor", "LightYellow");
         settings.addString("searchResultColor2", "#FFFF80");
         settings.addBoolean("colorCorrection", true);
@@ -337,7 +340,6 @@ public class SettingsManager {
         settings.addBoolean("noddraw", false);
         settings.addBoolean("bufferStrategy1", false);
         settings.addBoolean("mainResizable", true);
-        settings.addBoolean("splash", true);
         
         // Tray
         settings.addBoolean("closeToTray", false);
@@ -487,7 +489,6 @@ public class SettingsManager {
         settings.addBoolean("highlightIgnored", false);
         settings.addList("noHighlightUsers", new ArrayList(), Setting.STRING);
         settings.addList("highlightBlacklist", new ArrayList(), Setting.STRING);
-        settings.addBoolean("highlightMatches", true);
 
         // Ignore
         settings.addList("ignore", new ArrayList(), Setting.STRING);
@@ -498,11 +499,6 @@ public class SettingsManager {
         settings.addList("ignoredUsers", new ArrayList(), Setting.STRING);
         settings.addList("ignoredUsersWhisper", new ArrayList(), Setting.STRING);
         settings.addBoolean("ignoredUsersHideInGUI", true);
-        
-        // Filter
-        settings.addList("filter", new ArrayList(), Setting.STRING);
-        settings.addBoolean("filterEnabled", true);
-        settings.addBoolean("filterOwnText", true);
 
         // Chat Logging
         settings.addString("logMode", "always");
@@ -510,7 +506,6 @@ public class SettingsManager {
         settings.addBoolean("logMod", true);
         settings.addBoolean("logJoinPart", false);
         settings.addBoolean("logBan", true);
-        settings.addBoolean("logDeleted", true);
         settings.addBoolean("logSystem", false);
         settings.addBoolean("logInfo", true);
         settings.addBoolean("logViewerstats", true);
@@ -536,7 +531,6 @@ public class SettingsManager {
         settings.addBoolean("completionAllNameTypesRestriction", true);
         settings.addString("completionTab", "both");
         settings.addString("completionTab2", "emotes");
-        settings.addString("completionSearch", "words");
 
         // Stream Chat
         settings.addLong("streamChatMessageTimeout", -1);
@@ -576,7 +570,6 @@ public class SettingsManager {
         settings.addString("streamHighlightCommand", "!highlight");
         settings.addString("streamHighlightChannel", "");
         settings.addBoolean("streamHighlightChannelRespond", false);
-        settings.addBoolean("streamHighlightMarker", true);
 
         // Stream Status Writer
         settings.addBoolean("enableStatusWriter", false);
@@ -724,13 +717,6 @@ public class SettingsManager {
                         + ".Deny=/Automod_deny");
             }
         }
-        if (switchedFromVersionBefore("0.9.3")) {
-            String currentValue = settings.getString("timeoutButtons");
-            if (!StringUtil.toLowerCase(currentValue).contains("/delete")) {
-                settings.setString("timeoutButtons", currentValue + "\n\n"
-                        + "Delete=/delete $$(msg-id)");
-            }
-        }
         if (switchedFromVersionBefore("0.9.1b3")) {
             /**
              * Migrate both favorites and history, but only channels that don't
@@ -765,14 +751,6 @@ public class SettingsManager {
             }
             settings.putMap("roomFavorites", data);
         }
-        
-        // Turn off Highlight Background if using dark background (if not loaded
-        // from the settings yet)
-        Color bgColor = HtmlColors.decode(settings.getString("backgroundColor"));
-        if (HtmlColors.getBrightness(bgColor) < 128 && !settings.isValueSet("highlightBackground")) {
-            settings.setBoolean("highlightBackground", false);
-        }
-        
         overrideHotkeySettings();
     }
     
@@ -794,22 +772,19 @@ public class SettingsManager {
     }
     
     public void debugSettings() {
-        if (Chatty.getInvalidSettingsDirectory() != null) {
-            LOGGER.warning("Invalid -d dir: "+Chatty.getInvalidSettingsDirectory());
+        StringBuilder result = new StringBuilder("Settings: ");
+        boolean first = true;
+        for (String setting : debugSettings) {
+            if (!first) {
+                result.append(", ");
+            } else {
+                first = false;
+            }
+            result.append(setting);
+            result.append(":");
+            result.append(settings.settingValueToString(setting));
         }
-//        StringBuilder result = new StringBuilder("Settings: ");
-//        boolean first = true;
-//        for (String setting : debugSettings) {
-//            if (!first) {
-//                result.append(", ");
-//            } else {
-//                first = false;
-//            }
-//            result.append(setting);
-//            result.append(":");
-//            result.append(settings.settingValueToString(setting));
-//        }
-//        LOGGER.info(result.toString());
+        LOGGER.info(result.toString());
     }
     
     private void addDefaultHotkey(String version, String id, String hotkey) {

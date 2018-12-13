@@ -40,11 +40,6 @@ class Replacement implements Item {
     }
     
     @Override
-    public Set<String> getRequiredIdentifiers() {
-        return Item.getRequiredIdentifiers(isRequired, identifier);
-    }
-    
-    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;

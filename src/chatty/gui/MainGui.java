@@ -2,6 +2,7 @@
 package chatty.gui;
 
 import chatty.gui.components.textpane.UserMessage;
+import chatty.gui.components.userinfo.UserInfo;
 import chatty.gui.components.DebugWindow;
 import chatty.gui.components.ChannelInfoDialog;
 import chatty.gui.components.LinkLabelListener;
@@ -31,8 +32,6 @@ import chatty.gui.components.admin.StatusHistory;
 import chatty.gui.colors.UsercolorItem;
 import chatty.util.api.usericons.Usericon;
 import chatty.WhisperManager;
-import chatty.gui.Highlighter.Match;
-import chatty.gui.colors.ColorItem;
 import chatty.gui.colors.MsgColorItem;
 import chatty.gui.colors.MsgColorManager;
 import chatty.gui.components.AddressbookDialog;
@@ -48,7 +47,7 @@ import chatty.gui.components.NewsDialog;
 import chatty.gui.components.srl.SRL;
 import chatty.gui.components.SearchDialog;
 import chatty.gui.components.StreamChat;
-import chatty.gui.components.updating.UpdateDialog;
+import chatty.gui.components.UpdateMessage;
 import chatty.gui.components.menus.CommandActionEvent;
 import chatty.gui.components.menus.CommandMenuItems;
 import chatty.gui.components.menus.ContextMenuHelper;
@@ -58,7 +57,6 @@ import chatty.gui.components.settings.NotificationSettings;
 import chatty.gui.components.settings.SettingsDialog;
 import chatty.gui.components.textpane.AutoModMessage;
 import chatty.gui.components.textpane.SubscriberMessage;
-import chatty.gui.components.textpane.UserNotice;
 import chatty.gui.components.userinfo.UserInfoManager;
 import chatty.gui.notifications.Notification;
 import chatty.gui.notifications.NotificationActionListener;
@@ -86,15 +84,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.logging.LogRecord;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.ToolTipManager;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
@@ -118,12 +108,12 @@ public class MainGui extends JFrame implements Runnable {
     public final Emoticons emoticons = new Emoticons();
     
     // Reference back to the client to give back data etc.
-    TwitchClient client = null;
+    public TwitchClient client = null;
     
     public volatile boolean guiCreated;
     
     // Parts of the GUI
-    private Channels channels;
+    public Channels channels;
     private ConnectionDialog connectionDialog;
     private TokenDialog tokenDialog;
     private TokenGetDialog tokenGetDialog;
@@ -145,7 +135,7 @@ public class MainGui extends JFrame implements Runnable {
     private AddressbookDialog addressbookDialog;
     private SRL srl;
     private LivestreamerDialog livestreamerDialog;
-    private UpdateDialog updateDialog;
+    private UpdateMessage updateMessage;
     private NewsDialog newsDialog;
     private EmotesDialog emotesDialog;
     private FollowersDialog followerDialog;
@@ -158,7 +148,6 @@ public class MainGui extends JFrame implements Runnable {
     // Helpers
     private final Highlighter highlighter = new Highlighter();
     private final Highlighter ignoreChecker = new Highlighter();
-    private final Highlighter filter = new Highlighter();
     private final MsgColorManager msgColorManager;
     private StyleManager styleManager;
     private TrayIconManager trayIcon;
@@ -292,7 +281,7 @@ public class MainGui extends JFrame implements Runnable {
         addressbookDialog = new AddressbookDialog(this, client.addressbook);
         srl = new SRL(this, client.speedrunsLive, contextMenuListener);
         livestreamerDialog = new LivestreamerDialog(this, linkLabelListener, client.settings);
-        updateDialog = new UpdateDialog(this, linkLabelListener, client.settings,() -> exit());
+        updateMessage = new UpdateMessage(this);
         newsDialog = new NewsDialog(this, client.settings);
         
         client.settings.addSettingChangeListener(new MySettingChangeListener());
@@ -349,6 +338,7 @@ public class MainGui extends JFrame implements Runnable {
         windowStateManager.addWindow(streamChat, "streamChat", true, true);
         windowStateManager.addWindow(userInfoDialog.getDummyWindow(), "userInfo", true, false);
         windowStateManager.addWindow(autoModDialog, "autoMod", true, true);
+
         
         if (System.getProperty("java.version").equals("1.8.0_161")
                 || System.getProperty("java.version").equals("1.8.0_162")) {
@@ -357,7 +347,7 @@ public class MainGui extends JFrame implements Runnable {
         
         ToolTipManager.sharedInstance().setInitialDelay(300);
         ToolTipManager.sharedInstance().setDismissDelay(20*1000);
-        
+
         guiCreated = true;
     }
     
@@ -588,15 +578,6 @@ public class MainGui extends JFrame implements Runnable {
             }
         });
         
-        addMenuAction("dialog.updates", "Dialog: Updates",
-                KeyEvent.VK_U, new AbstractAction() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openUpdateDialog();
-            }
-        });
-        
         addMenuAction("about", "Open Help", KeyEvent.VK_H,
                 new AbstractAction() {
 
@@ -707,19 +688,11 @@ public class MainGui extends JFrame implements Runnable {
             }
         });
         
-        hotkeyManager.registerAction("stream.addhighlight", "Stream: Add Stream Highlight", new AbstractAction() {
+        hotkeyManager.registerAction("stream.addhighlight", "Add Stream Highlight", new AbstractAction() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 hotkeyCommand("addstreamhighlight", null, false);
-            }
-        });
-        
-        hotkeyManager.registerAction("stream.addmarker", "Stream: Add Stream Marker", new AbstractAction() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                hotkeyCommand("marker", null, false);
             }
         });
         
@@ -806,7 +779,6 @@ public class MainGui extends JFrame implements Runnable {
                 if (!guiCreated) {
                     return;
                 }
-                
                 channels.setInitialFocus();
                 
                 windowStateManager.loadWindowStates();
@@ -916,7 +888,6 @@ public class MainGui extends JFrame implements Runnable {
         }
         updateHighlight();
         updateIgnore();
-        updateFilter();
         updateHistoryRange();
         updateHistoryVerticalZoom();
         updateNotificationSettings();
@@ -945,11 +916,7 @@ public class MainGui extends JFrame implements Runnable {
         emoticons.addEmoji(client.settings.getString("emoji"));
         emoticons.setCheerState(client.settings.getString("cheersType"));
         emoticons.setCheerBackground(HtmlColors.decode(client.settings.getString("backgroundColor")));
-        
         client.api.setToken(client.settings.getString("token"));
-        if (client.settings.getList("scopes").isEmpty()) {
-            client.api.checkToken();
-        }
         
         userInfoDialog.setFontSize(client.settings.getLong("dialogFontSize"));
         
@@ -1000,10 +967,6 @@ public class MainGui extends JFrame implements Runnable {
     
     private void updateIgnore() {
         ignoreChecker.update(StringUtil.getStringList(client.settings.getList("ignore")));
-    }
-    
-    private void updateFilter() {
-        filter.update(StringUtil.getStringList(client.settings.getList("filter")));
     }
     
     private void updateCustomContextMenuEntries() {
@@ -1277,31 +1240,23 @@ public class MainGui extends JFrame implements Runnable {
             // Token Dialog actions
             //---------------------------
             else if (event.getSource() == tokenDialog.getDeleteTokenButton()) {
-                int result = JOptionPane.showOptionDialog(tokenDialog,
+                int result = JOptionPane.showConfirmDialog(tokenDialog,
                         "<html><body style='width:400px'>"
-                                + Language.getString("login.removeLogin")
-                                + "<ul>"
-                                + "<li>"+Language.getString("login.removeLogin.revoke")
-                                + "<li>"+Language.getString("login.removeLogin.remove")
-                                + "</ul>"
-                                + Language.getString("login.removeLogin.note"),
-                        Language.getString("login.removeLogin.title"),
-                        JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        new String[]{Language.getString("login.removeLogin.button.revoke"),
-                            Language.getString("login.removeLogin.button.remove"),
-                            Language.getString("dialog.button.cancel")},
-                        Language.getString("login.removeLogin.button.revoke"));
+                        + "This removes the login token from Chatty.<br><br>"
+                        + "It does not revoke access for the token, which "
+                        + "usually is no problem if the token isn't saved "
+                        + "anywhere else. If you suspect it may still be stored "
+                        + "in other places (or even compromised) you have to go "
+                        + "to <code>twitch.tv/settings/connections</code> and "
+                        + "click 'Disconnect' next to Chatty to revoke access.",
+                        "Save Settings to file",
+                        JOptionPane.OK_CANCEL_OPTION);
                 if (result == 0) {
-                    client.api.revokeToken(client.settings.getString("token"));
-                }
-                if (result == 0 || result == 1) {
                     client.settings.setString("token", "");
                     client.settings.setBoolean("foreignToken", false);
                     client.settings.setString("username", "");
                     client.settings.setString("userid", "");
-                    client.settings.listClear("scopes");
+                    resetTokenScopes();
                     updateConnectionDialog(null);
                     tokenDialog.update("", "");
                     updateTokenScopes();
@@ -2201,7 +2156,7 @@ public class MainGui extends JFrame implements Runnable {
             if (parameter != null && !parameter.isEmpty()) {
                 message = parameter;
             }
-            UserMessage m = new UserMessage(client.getSpecialUser(), message, null, null, 0, null, null, null);
+            UserMessage m = new UserMessage(client.getSpecialUser(), message, null, null, 0);
             streamChat.printMessage(m);
         } else if (command.equals("livestreamer")) {
             String stream = null;
@@ -2484,8 +2439,8 @@ public class MainGui extends JFrame implements Runnable {
     }
     
     private void openUpdateDialog() {
-        updateDialog.setLocationRelativeTo(this);
-        updateDialog.showDialog();
+        updateMessage.setLocationRelativeTo(this);
+        updateMessage.showDialog();
     }
     
     private void openFavoritesDialogFromConnectionDialog(String channel) {
@@ -2737,16 +2692,14 @@ public class MainGui extends JFrame implements Runnable {
                 channel = chan.getChannel();
                 
                 boolean isOwnMessage = isOwnUsername(user.getName()) || (whisper && action);
-                boolean ignoredUser = (userIgnored(user, whisper) && !isOwnMessage);
                 boolean ignored = checkHighlight(user, text, ignoreChecker, "ignore", isOwnMessage)
-                        || ignoredUser;
+                        || (userIgnored(user, whisper) && !isOwnMessage);
                 
                 if (!ignored || client.settings.getBoolean("logIgnored")) {
                     client.chatLog.message(chan.getFilename(), user, text, action);
                 }
                 
                 boolean highlighted = false;
-                List<Match> highlightMatches = null;
                 if ((client.settings.getBoolean("highlightIgnored") || !ignored)
                         && !client.settings.listContains("noHighlightUsers", user.getName())) {
                     highlighted = checkHighlight(user, text, highlighter, "highlight", isOwnMessage);
@@ -2756,9 +2709,8 @@ public class MainGui extends JFrame implements Runnable {
                 
                 // Do stuff if highlighted, without printing message
                 if (highlighted) {
-                    highlightMatches = highlighter.getLastTextMatches();
                     highlightedMessages.addMessage(channel, user, text, action,
-                            tagEmotes, bits, whisper, highlightMatches);
+                            tagEmotes, bits, whisper);
                     if (!highlighter.getLastMatchNoNotification()) {
                         channels.setChannelHighlighted(chan);
                     } else {
@@ -2782,14 +2734,8 @@ public class MainGui extends JFrame implements Runnable {
                 
                 // Do stuff if ignored, without printing message
                 if (ignored) {
-                    List<Match> ignoreMatches = null;
-                    if (!ignoredUser) {
-                        // Text matches might not be valid if ignore was through
-                        // ignored users list
-                        ignoreMatches = ignoreChecker.getLastTextMatches();
-                    }
                     ignoredMessages.addMessage(channel, user, text, action,
-                            tagEmotes, bits, whisper, ignoreMatches);
+                            tagEmotes, bits, whisper);
                     ignoredMessagesHelper.ignoredMessage(channel);
                 }
                 long ignoreMode = client.settings.getLong("ignoreMode");
@@ -2803,20 +2749,11 @@ public class MainGui extends JFrame implements Runnable {
                         chan.printLine("Own message ignored.");
                     }
                 } else {
-                    boolean hasReplacements = checkHighlight(user, text, filter, "filter", isOwnMessage);
-
                     // Print message, but determine how exactly
-                    UserMessage message = new UserMessage(user, text, tagEmotes, id, bits,
-                            highlightMatches,
-                            hasReplacements ? filter.getLastTextMatches() : null,
-                            hasReplacements ? filter.getLastReplacement() : null);
-                    if (highlighted) {
-                        message.color = highlighter.getLastMatchColor();
-                        message.backgroundColor = highlighter.getLastMatchBackgroundColor();
-                    } else {
-                        ColorItem colorItem = msgColorManager.getColor(user, text);
-                        message.color = colorItem.getForegroundIfEnabled();
-                        message.backgroundColor = colorItem.getBackgroundIfEnabled();
+                    UserMessage message = new UserMessage(user, text, tagEmotes, id, bits);
+                    message.color = highlighter.getLastMatchColor();
+                    if (!highlighted) {
+                        message.color = msgColorManager.getColor(user, text);
                     }
                     message.whisper = whisper;
                     message.action = action;
@@ -2833,7 +2770,7 @@ public class MainGui extends JFrame implements Runnable {
                 
                 CopyMessages.copyMessage(client.settings, user, text, highlighted);
                 
-                // Update User
+                // Stuff independent of highlight/ignore
                 user.addMessage(processMessage(text), action, id);
                 if (highlighted) {
                     user.setHighlighted();
@@ -2846,49 +2783,36 @@ public class MainGui extends JFrame implements Runnable {
     public void printSubscriberMessage(final User user,
             final String text, final String message, final int months,
             final String emotes) {
-        SwingUtilities.invokeLater(() -> {
-            Emoticons.TagEmotes tagEmotes = Emoticons.parseEmotesTag(emotes);
-            SubscriberMessage m = new SubscriberMessage(user, text, message, months, tagEmotes, null, null);
+        SwingUtilities.invokeLater(new Runnable() {
 
-            boolean printed = printUsernotice(m);
-            if (printed) {
-                notificationManager.newSubscriber(user, text, message);
+            @Override
+            public void run() {
+                // Prepare, check ignore
+                String fullMessage;
+                if (StringUtil.isNullOrEmpty(message)) {
+                    fullMessage = "[Notification] "+text;
+                } else {
+                    fullMessage = String.format("[Notification] %s [%s]", text, message);
+                }
+                
+                // Chat window
+                if (!checkInfoIgnore(fullMessage)) {
+                    Emoticons.TagEmotes tagEmotes = Emoticons.parseEmotesTag(emotes);
+                    SubscriberMessage m = new SubscriberMessage(user, text, message, months, tagEmotes, null);
+                    channels.getChannel(user.getRoom()).printMessage(m);
+                    notificationManager.newSubscriber(user, text, message);
+                } else {
+                    ignoredMessages.addInfoMessage(user.getRoom().getDisplayName(), fullMessage);
+                }
+
+                // Chatlog/User Info
+                client.chatLog.info(user.getRoom().getFilename(), fullMessage);
+                if (!user.getName().isEmpty()) {
+                    user.addSub(message != null ? processMessage(message) : "", text);
+                    updateUserInfoDialog(user);
+                }
             }
         });
-    }
-    
-    public void printUsernotice(final String type, final User user, final String text,
-            final String message, final String emotes) {
-        SwingUtilities.invokeLater(() -> {
-            Emoticons.TagEmotes tagEmotes = Emoticons.parseEmotesTag(emotes);
-            UserNotice m = new UserNotice(type, user, text, message, tagEmotes, null, null);
-            printUsernotice(m);
-        });
-    }
-    
-    private boolean printUsernotice(UserNotice m) {
-        boolean ignored = checkInfoIgnore(m.fullMessage);
-        if (!ignored) {
-            channels.getChannel(m.user.getRoom()).printMessage(m);
-        } else {
-            ignoredMessages.addInfoMessage(m.user.getRoom().getDisplayName(), m.fullMessage);
-        }
-        
-        // Chatlog / User Dialog
-        client.chatLog.info(m.user.getRoom().getFilename(), m.fullMessage);
-        
-        // Only add if not dummy user (dummy user possibly not used anymore)
-        if (!m.user.getName().isEmpty()) {
-            String message = m.attachedMessage != null ? processMessage(m.attachedMessage) : "";
-            String text = m.text;
-            if (m instanceof SubscriberMessage) {
-                m.user.addSub(message, text);
-            } else {
-                m.user.addInfo(message, text);
-            }
-            updateUserInfoDialog(m.user);
-        }
-        return !ignored;
     }
     
     /**
@@ -2953,17 +2877,6 @@ public class MainGui extends JFrame implements Runnable {
                 if (client.settings.listContains("streamChatChannels", user.getChannel())) {
                     streamChat.userBanned(user, duration, reason, id);
                 }
-            }
-        });
-    }
-    
-    public void msgDeleted(final User user, String targetMsgId, String msg) {
-        SwingUtilities.invokeLater(() -> {
-            channels.getChannel(user.getRoom()).userBanned(user, -2, null, targetMsgId);
-            user.addMsgDeleted(targetMsgId, msg);
-            updateUserInfoDialog(user);
-            if (client.settings.listContains("streamChatChannels", user.getChannel())) {
-                streamChat.userBanned(user, -2, null, targetMsgId);
             }
         });
     }
@@ -3199,7 +3112,7 @@ public class MainGui extends JFrame implements Runnable {
                         String message = data.args.get(1);
                         if (client.settings.getBoolean("showAutoMod")) {
                             User user = client.getUser(channel, username);
-                            chan.printMessage(new AutoModMessage(user, message, data.msgId, null));
+                            chan.printMessage(new AutoModMessage(user, message, data.msgId));
                         }
                         notificationManager.autoModMessage(channel, username, message);
                     }
@@ -3346,14 +3259,13 @@ public class MainGui extends JFrame implements Runnable {
         client.commandReconnect();
     }
     
-    public void setUpdateAvailable(final String newVersion, final GitHub.Releases releases) {
-        SwingUtilities.invokeLater(() -> {
-            menu.setUpdateNotification(true);
-            //updateMessage.setNewVersion(newVersion);
-            updateDialog.setInfo(releases);
-            if (releases != null) {
-                // From actual request
-                updateDialog.showDialog();
+    public void setUpdateAvailable(final String newVersion) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                menu.setUpdateNotification(true);
+                updateMessage.setNewVersion(newVersion);
             }
         });
     }
@@ -3504,7 +3416,7 @@ public class MainGui extends JFrame implements Runnable {
             String trayTooltip = makeTitle(channels.getLastActiveChannel(), state);
             trayIcon.setTooltipText(trayTooltip);
             if (client.settings.getBoolean("simpleTitle")) {
-                setTitle("Chatty");
+                setTitle("Mod4You Chatty");
             } else {
                 setTitle(mainTitle);
             }
@@ -3616,7 +3528,7 @@ public class MainGui extends JFrame implements Runnable {
                 title += " [W]";
             }
 
-            title += " - Chatty";
+            title += " - Mod4You Chatty";
             
             String addition = client.settings.getString("titleAddition");
             if (!addition.isEmpty()) {
@@ -3865,7 +3777,7 @@ public class MainGui extends JFrame implements Runnable {
                 showTokenWarning();
             }
         }
-        else if (!tokenInfo.hasScope(TokenInfo.Scope.CHAT)) {
+        else if (!tokenInfo.chat_access) {
             result = "No chat access (required) with token.";
         }
         else {
@@ -3906,9 +3818,15 @@ public class MainGui extends JFrame implements Runnable {
             return;
         }
         if (info.valid) {
-            client.settings.putList("scopes", info.scopes);
-        } else {
-            client.settings.listClear("scopes");
+            client.settings.setBoolean("token_chat", info.chat_access);
+            client.settings.setBoolean("token_editor", info.channel_editor);
+            client.settings.setBoolean("token_commercials", info.channel_commercials);
+            client.settings.setBoolean("token_user", info.user_read);
+            client.settings.setBoolean("token_subs", info.channel_subscriptions);
+            client.settings.setBoolean("token_follow", info.user_follows_edit);
+        }
+        else {
+            resetTokenScopes();
         }
         updateTokenScopes();
     }
@@ -3917,11 +3835,23 @@ public class MainGui extends JFrame implements Runnable {
      * Updates the token scopes in the GUI based on the settings.
      */
     private void updateTokenScopes() {
-        Collection<String> scopes = client.settings.getList("scopes");
-        tokenDialog.updateAccess(scopes);
-        adminDialog.updateAccess(
-                scopes.contains(TokenInfo.Scope.EDITOR.scope),
-                scopes.contains(TokenInfo.Scope.COMMERICALS.scope));
+        boolean chat = client.settings.getBoolean("token_chat");
+        boolean commercials = client.settings.getBoolean("token_commercials");
+        boolean editor = client.settings.getBoolean("token_editor");
+        boolean user = client.settings.getBoolean("token_user");
+        boolean subscriptions = client.settings.getBoolean("token_subs");
+        boolean follow = client.settings.getBoolean("token_follow");
+        tokenDialog.updateAccess(chat, editor, commercials, user, subscriptions, follow);
+        adminDialog.updateAccess(editor, commercials);
+    }
+    
+    private void resetTokenScopes() {
+        client.settings.setBoolean("token_chat", false);
+        client.settings.setBoolean("token_commercials", false);
+        client.settings.setBoolean("token_editor", false);
+        client.settings.setBoolean("token_user", false);
+        client.settings.setBoolean("token_subs", false);
+        client.settings.setBoolean("token_follow", false);
     }
     
     public void showTokenWarning() {
@@ -4137,7 +4067,7 @@ public class MainGui extends JFrame implements Runnable {
      */
     private void requestFollowedStreams() {
         if (client.settings.getBoolean("requestFollowedStreams") &&
-                client.settings.getList("scopes").contains(TokenInfo.Scope.USERINFO.scope)) {
+                client.settings.getBoolean("token_user")) {
             client.api.getFollowedStreams(client.settings.getString("token"));
         }
     }
@@ -4237,8 +4167,6 @@ public class MainGui extends JFrame implements Runnable {
                     updateHighlight();
                 } else if (setting.equals("ignore")) {
                     updateIgnore();
-                } else if (setting.equals("filter")) {
-                    updateFilter();
                 } else if (setting.equals("hotkeys")) {
                     hotkeyManager.loadFromSettings(client.settings);
                 }

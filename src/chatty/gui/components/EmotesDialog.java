@@ -25,7 +25,6 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -131,7 +130,7 @@ public class EmotesDialog extends JDialog {
         emoteUser = new Emoticon.EmoticonUser() {
 
             @Override
-            public void iconLoaded(Image oldImage, Image newImage, boolean sizeChanged) {
+            public void iconLoaded() {
 //                repaint = true;
                 repaint();
             }
@@ -1056,7 +1055,7 @@ public class EmotesDialog extends JDialog {
             panel.setLayout(new GridBagLayout());
             
             addScaledEmote(emote, panel, 1, "100%");
-            if (emote.getWidth()*3+200 < EmotesDialog.this.getWidth() && !emote.isAnimated()) {
+            if (emote.getWidth()*3+200 < EmotesDialog.this.getWidth() && !emote.isAnimated) {
                 /**
                  * Don't show middle one if emote is too wide (this won't be too
                  * exact, but should work well enough in this case).

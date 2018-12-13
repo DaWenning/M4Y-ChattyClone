@@ -48,10 +48,6 @@ public class CustomCommand {
         return items.getIdentifiersWithPrefix(prefix);
     }
     
-    public Set<String> getRequiredIdentifiers() {
-        return items.getRequiredIdentifiers();
-    }
-    
     public String getCommandName() {
         if (items != null && !items.isEmpty()) {
             Item firstToken = items.getItem(0);
@@ -105,9 +101,8 @@ public class CustomCommand {
     }
 
     public static void main(String[] args) {
-        CustomCommand command = CustomCommand.parse("$lower(abc) $$1- $$(blah) fewaf $afwe");
-        System.out.println(command.error);
-        System.out.println(command.getRequiredIdentifiers());
+        CustomCommand command = CustomCommand.parse("$join");
+        System.out.println(command);
     }
     
 }

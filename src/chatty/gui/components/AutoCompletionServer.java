@@ -32,7 +32,7 @@ public interface AutoCompletionServer {
      * 
      * @param type The type used to narrow down what to search for
      * @param prefix The prefix used to narrow down what to search for
-     * @param search The search item, will never be null or empty
+     * @param search The search item
      * @return A CompletionItems object containing the result
      */
     public CompletionItems getCompletionItems(String type, String prefix,

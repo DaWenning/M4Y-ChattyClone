@@ -167,6 +167,7 @@ public class UserInfoManager {
         if (canRemove(dialog)) {
             dialogs.remove(dialog);
             main.setWindowAttached(dialog, false);
+            System.out.println("Removed "+dialog);
         } else {
             dialog.setPinned(false);
         }

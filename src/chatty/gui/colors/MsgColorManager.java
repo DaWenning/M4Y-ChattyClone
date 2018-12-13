@@ -18,8 +18,6 @@ import java.util.List;
  */
 public class MsgColorManager {
     
-    private static final ColorItem EMPTY = new ColorItem(null, null, false, null, false);
-    
     private static final String DATA_SETTING = "msgColors";
     private static final String ENABLED_SETTING = "msgColorsEnabled";
     
@@ -38,9 +36,6 @@ public class MsgColorManager {
      * <p>The items are assumed to be in the format:<br />
      * <code>[id],[color]</code> (the last comma is used as seperating comma,
      * since {@code id} may contain a comma, but {@code color} should not)</p>
-     * 
-     * <p>New format:<br />
-     * <code>[id],[foreground]/[enabled]/[background]/[enabled]</p>
      */
     private void loadFromSettings() {
         List<String> loadedList = new LinkedList<>();
@@ -50,27 +45,8 @@ public class MsgColorManager {
             int splitAt = entry.lastIndexOf(",");
             if (splitAt > 0 && entry.length() > splitAt+1) {
                 String id = entry.substring(0, splitAt);
-                String colorsPart = entry.substring(splitAt + 1);
-                String[] colors = colorsPart.split("/");
-                Color foreground = HtmlColors.decode(colors[0]);
-                Color background;
-                boolean foregroundEnabled;
-                boolean backgroundEnabled;
-                if (colors.length == 4) {
-                    // New format with background color
-                    background = HtmlColors.decode(colors[2], null);
-                    foregroundEnabled = colors[1].equals("1");
-                    backgroundEnabled = colors[3].equals("1");
-                } else {
-                    // Old or invalid format, make defaults
-                    background = null;
-                    foregroundEnabled = true;
-                    backgroundEnabled = false;
-                }
-                
-                loadedData.add(new MsgColorItem(id,
-                        foreground, foregroundEnabled,
-                        background, backgroundEnabled));
+                Color color = HtmlColors.decode(entry.substring(splitAt + 1));
+                loadedData.add(new MsgColorItem(id, color));
             }
         }
         data = loadedData;
@@ -82,12 +58,7 @@ public class MsgColorManager {
     private void saveToSettings() {
         List<String> dataToSave = new LinkedList<>();
         for (MsgColorItem item : data) {
-            dataToSave.add(String.format("%s,%s/%s/%s/%s",
-                    item.getId(),
-                    HtmlColors.getColorString(item.getForeground()),
-                    item.getForegroundEnabled() ? "1" : "0",
-                    HtmlColors.getColorString(item.getBackground()),
-                    item.getBackgroundEnabled() ? "1" : "0"));
+            dataToSave.add(item.getId()+","+HtmlColors.getColorString(item.getColor()));
         }
         settings.putList(DATA_SETTING, dataToSave);
     }
@@ -119,16 +90,16 @@ public class MsgColorManager {
      * @param text
      * @return 
      */
-    public synchronized ColorItem getColor(User user, String text) {
+    public synchronized Color getColor(User user, String text) {
         if (data == null || !settings.getBoolean(ENABLED_SETTING)) {
-            return EMPTY;
+            return null;
         }
         for (MsgColorItem item : data) {
             if (item.matches(user, text)) {
-                return item;
+                return item.getColor();
             }
         }
-        return EMPTY;
+        return null;
     }
     
 }

@@ -6,8 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Makes the text from the given Item lowercase.
- * 
+ *
  * @author tduva
  */
 class Lower implements Item {
@@ -23,10 +22,10 @@ class Lower implements Item {
     @Override
     public String replace(Parameters parameters) {
         String value = identifier.replace(parameters);
-        if (!Item.checkReq(isRequired, value)) {
-            return null;
+        if (value != null) {
+            return StringUtil.toLowerCase(value);
         }
-        return StringUtil.toLowerCase(value);
+        return isRequired ? null : "";
     }
     
     @Override
@@ -37,11 +36,6 @@ class Lower implements Item {
     @Override
     public Set<String> getIdentifiersWithPrefix(String prefix) {
         return Item.getIdentifiersWithPrefix(prefix, identifier);
-    }
-    
-    @Override
-    public Set<String> getRequiredIdentifiers() {
-        return Item.getRequiredIdentifiers(isRequired, identifier);
     }
     
     @Override
