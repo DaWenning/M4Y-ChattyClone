@@ -319,8 +319,8 @@ class NotificationEditor extends TableEditor<Notification> {
 
                 @Override
                 public void colorUpdated() {
-                    foregroundColor.update(backgroundColor.getSettingValue());
-                    backgroundColor.update(foregroundColor.getSettingValue());
+                    foregroundColor.setBaseColor(backgroundColor.getSettingValue());
+                    backgroundColor.setBaseColor(foregroundColor.getSettingValue());
                     updateTestNotification();
                 }
             };
@@ -329,11 +329,11 @@ class NotificationEditor extends TableEditor<Notification> {
             
             colorTemplates = new ColorTemplates(settings,
                     NotificationManager.COLOR_PRESETS_SETTING_NAME,
-                    foregroundColor, backgroundColor);
-            colorTemplates.addPreset("Classic", "Black", "#FFFFF0");
-            colorTemplates.addPreset("Highlight", "Black", "#FFFF79");
-            colorTemplates.addPreset("Black", "White", "#333333");
-            colorTemplates.addPreset("Violet", "White", "BlueViolet"); // TODO: Other Chatty icon
+                    new ColorSetting[]{foregroundColor, backgroundColor});
+            colorTemplates.addPreset("Classic",new String[]{"Black", "#FFFFF0"});
+            colorTemplates.addPreset("Highlight",new String[]{"Black", "#FFFF79"});
+            colorTemplates.addPreset("Black", new String[]{"White", "#333333"});
+            colorTemplates.addPreset("Violet", new String[]{"White", "BlueViolet"}); // TODO: Other Chatty icon
             colorTemplates.init();
             
             testColors = new JButton("Test Colors");

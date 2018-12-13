@@ -17,7 +17,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.Collection;
-import javax.swing.*;
+import javax.swing.JDialog;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 
 /**
  * Simple dialog that contains a ChannelTextPane with stream chat features
@@ -42,12 +44,10 @@ public class StreamChat extends JDialog {
         JScrollPane scroll = new JScrollPane(textPane);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         textPane.setScrollPane(scroll);
-        textPane.setPreferredSize(new Dimension(200,100));
         
         add(scroll, BorderLayout.CENTER);
-
         
-        pack();
+        setSize(400, 200);
     }
     
     public void printMessage(Message message) {
