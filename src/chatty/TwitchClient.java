@@ -1103,6 +1103,7 @@ public class TwitchClient {
         }
         else if (command.equals("readspelling")) {
             Chatty.spellchecker.readSpellingFile();
+            g.printLine("[Spelling] The spelling file was updated");
         }
         
         else if (c.command(channel, command, parameter, msgId)) {
