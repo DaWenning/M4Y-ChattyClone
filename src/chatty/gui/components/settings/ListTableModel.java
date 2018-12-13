@@ -16,11 +16,20 @@ import javax.swing.table.AbstractTableModel;
  */
 public abstract class ListTableModel<T> extends AbstractTableModel {
 
-    private final String[] columnNames;
+    private String[] columnNames;
     private List<T> data = new ArrayList<>();
 
     public ListTableModel(String[] columns) {
         columnNames = columns;
+    }
+    
+    /**
+     * Changing columns after the table is created may not work.
+     * 
+     * @param names 
+     */
+    public void setColumnNames(String[] names) {
+        this.columnNames = names;
     }
 
     /**

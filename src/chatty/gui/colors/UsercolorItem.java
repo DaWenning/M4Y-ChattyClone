@@ -5,11 +5,6 @@ import chatty.gui.HtmlColors;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
-/**
- * Associates some kind of id (name, type of user, color) with a Color.
  * 
  * @author tduva
  */
@@ -34,10 +29,8 @@ public class UsercolorItem extends ColorItem {
     public final String category;
 
     public UsercolorItem(String id, Color color) {
-        this.color = color;
-        this.id = id;
+        super(id, color, true, null, false);
         
-        // Check if a color was specified as id
         if (id.startsWith("#")) {
             idColor = HtmlColors.decode(id, null);
         } else {
@@ -69,14 +62,6 @@ public class UsercolorItem extends ColorItem {
         } else {
             type = TYPE_UNDEFINED;
         }
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public String getId() {
-        return id;
     }
 
 }

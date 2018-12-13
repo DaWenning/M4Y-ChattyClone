@@ -9,6 +9,7 @@ import chatty.gui.components.ChannelDialog;
 import chatty.gui.components.tabs.Tabs;
 import chatty.gui.components.menus.ContextMenuListener;
 import chatty.gui.components.menus.TabContextMenu;
+import chatty.util.Debugging;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -17,7 +18,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.*;
-import javax.swing.*;
+import javax.swing.JDialog;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -113,7 +115,7 @@ public class Channels {
         Channel channel = channels.get(room.getChannel());
         if (channel != null) {
             if (channel.setRoom(room)) {
-                System.out.println("Update Room");
+                Debugging.println("Update Room");
                 updateChannelTabName(channel);
             }
         }
@@ -187,8 +189,6 @@ public class Channels {
     private void addDefaultChannel() {
         defaultChannel = createChannel(Room.EMPTY, Channel.Type.NONE);
         tabs.addTab(defaultChannel);
-
-        //tabs.addTab(new JButton("test"));
     }
     
     private Channel createChannel(Room room, Channel.Type type) {
@@ -281,7 +281,7 @@ public class Channels {
         if (panel == null) {
             panel = addChannel(room, type);
         } else if (panel.setRoom(room)) {
-            System.out.println("Updating Channel Name to "+panel.getName());
+            Debugging.println("Updating Channel Name to "+panel.getName());
             updateChannelTabName(panel);
         }
         return panel;
@@ -647,7 +647,7 @@ public class Channels {
     }
     
     public void setInitialFocus() {
-        System.out.println("setInitialFocus");
+        Debugging.println("setInitialFocus");
         getActiveChannel().requestFocusInWindow();
     }
     

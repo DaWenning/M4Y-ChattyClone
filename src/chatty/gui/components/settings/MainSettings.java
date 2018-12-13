@@ -26,7 +26,10 @@ public class MainSettings extends SettingsPanel {
         //=========
         // Startup
         //=========
-        gbc = d.makeGbc(0, 0, 1, 1, GridBagConstraints.EAST);
+        gbc = d.makeGbc(0, 0, 2, 1, GridBagConstraints.WEST);
+        startSettingsPanel.add(d.addSimpleBooleanSetting("splash"), gbc);
+        
+        gbc = d.makeGbc(0, 1, 1, 1, GridBagConstraints.EAST);
         startSettingsPanel.add(new JLabel(Language.getString("settings.startup.onStart")), gbc);
         
         Map<Long, String> onStartDef = new LinkedHashMap<>();
@@ -37,13 +40,13 @@ public class MainSettings extends SettingsPanel {
         onStartDef.put((long)4, Language.getString("settings.startup.option.connectJoinFavorites"));
         ComboLongSetting onStart = new ComboLongSetting(onStartDef);
         d.addLongSetting("onStart", onStart);
-        gbc = d.makeGbc(1, 0, 1, 1, GridBagConstraints.WEST);
+        gbc = d.makeGbc(1, 1, 1, 1, GridBagConstraints.WEST);
         startSettingsPanel.add(onStart, gbc);
         
-        gbc = d.makeGbc(0, 1, 1, 1, GridBagConstraints.EAST);
+        gbc = d.makeGbc(0, 2, 1, 1, GridBagConstraints.EAST);
         startSettingsPanel.add(new JLabel(Language.getString("settings.startup.channels")), gbc);
         
-        gbc = d.makeGbc(1, 1, 1, 1, GridBagConstraints.WEST);
+        gbc = d.makeGbc(1, 2, 1, 1, GridBagConstraints.WEST);
         JTextField channels = d.addSimpleStringSetting("autojoinChannel", 25, true);
         startSettingsPanel.add(channels, gbc);
         
@@ -74,16 +77,17 @@ public class MainSettings extends SettingsPanel {
     public static Map<String, String> getLanguageOptions() {
         Map<String, String> languageOptions = new LinkedHashMap<>();
         languageOptions.put("", Language.getString("settings.language.option.defaultLanguage"));
+        languageOptions.put("zh_TW", "Chinese (traditional)");
         languageOptions.put("en_US", "English (US)");
         languageOptions.put("en_GB", "English (UK)");
+        languageOptions.put("fr", "French / Français");
         languageOptions.put("de", "German / Deutsch");
-        languageOptions.put("es", "Spanish / Español");
         languageOptions.put("ja", "Japanese / 日本語");
-        languageOptions.put("zh_TW", "Chinese (traditional)");
-        //languageOptions.put("fr", "French / Français");
-        languageOptions.put("tr", "Turkish / Türk");
-        languageOptions.put("pl", "Polish / Polski");
         languageOptions.put("ko", "Korean / 한국어");
+        languageOptions.put("pl", "Polish / Polski");
+        languageOptions.put("ru", "Russian / Русский");
+        languageOptions.put("es", "Spanish / Español");
+        languageOptions.put("tr", "Turkish / Türk");
         return languageOptions;
     }
   
