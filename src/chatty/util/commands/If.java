@@ -28,20 +28,13 @@ class If implements Item {
     @Override
     public String replace(Parameters parameters) {
         String value = identifier.replace(parameters);
-        if (value == null) {
-            return null;
+        if (value != null && !value.isEmpty()) {
+            return output1.replace(parameters, isRequired);
         }
-        String output = "";
-        if (!value.isEmpty()) {
-            output = output1.replace(parameters);
+        if (output2 != null) {
+            return output2.replace(parameters, isRequired);
         }
-        else if (output2 != null) {
-            output = output2.replace(parameters);
-        }
-        if (!Item.checkReq(isRequired, output)) {
-            return null;
-        }
-        return output;
+        return isRequired ? null : "";
     }
 
     @Override
@@ -52,11 +45,6 @@ class If implements Item {
     @Override
     public Set<String> getIdentifiersWithPrefix(String prefix) {
         return Item.getIdentifiersWithPrefix(prefix, identifier, output1, output2);
-    }
-    
-    @Override
-    public Set<String> getRequiredIdentifiers() {
-        return Item.getRequiredIdentifiers(isRequired, identifier, output1, output2);
     }
 
     @Override

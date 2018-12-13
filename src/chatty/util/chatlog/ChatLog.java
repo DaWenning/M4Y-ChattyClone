@@ -169,18 +169,13 @@ public class ChatLog {
         }
         compact(channel, "BAN", text);
     }
-    
-    public void msgDeleted(User user, String msg) {
-        compact(user.getRoom().getFilename(), "DELETED", user.getRegularDisplayNick()+" ("+msg+")");
-    }
 
     public void compact(String channel, String type, String info) {
         if (isChanEnabled(channel)) {
             if (
                     ((type.equals("MOD") || type.equals("UNMOD")) && isSettingEnabled("logMod"))
                     || ((type.equals("JOIN") || type.equals("PART")) && isSettingEnabled("logJoinPart"))
-                    || (type.equals("BAN") && isSettingEnabled("logBan")
-                    || (type.equals("DELETED") && isSettingEnabled("logDeleted")))
+                    || (type.equals("BAN") && isSettingEnabled("logBan"))
                 ) {
                 compactAdd(channel, type, info);
             }

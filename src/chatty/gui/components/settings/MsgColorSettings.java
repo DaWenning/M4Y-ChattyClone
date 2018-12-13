@@ -18,7 +18,7 @@ public class MsgColorSettings extends SettingsPanel {
     
     private static final String INFO_TEXT = "<html><body>"
             + "Customize message colors based on Highlighting rules. "
-            + "[help:Message_Colors More information..]";
+            + "[help:Msg_Colors More information..]";
     
     private final ItemColorEditor<MsgColorItem> data;
     
@@ -32,16 +32,10 @@ public class MsgColorSettings extends SettingsPanel {
         
         gbc = d.makeGbc(0, 0, 1, 1);
         gbc.anchor = GridBagConstraints.WEST;
-        main.add(d.addSimpleBooleanSetting("msgColorsEnabled"), gbc);
+        main.add(d.addSimpleBooleanSetting("msgColorsEnabled", "Enable custom message colors", "Changes colors and stuff.."), gbc);
         
         data = new ItemColorEditor<>(d,
-                (id,
-                        foreground, foregroundEnabled,
-                        background, backgroundEnabled) -> {
-                    return new MsgColorItem(id,
-                            foreground, foregroundEnabled,
-                            background, backgroundEnabled);
-                }, true);
+                (id, color) -> { return new MsgColorItem(id, color); });
         data.setPreferredSize(new Dimension(1,150));
         gbc = d.makeGbc(0, 1, 1, 1);
         gbc.fill = GridBagConstraints.BOTH;
@@ -65,16 +59,11 @@ public class MsgColorSettings extends SettingsPanel {
         return data.getData();
     }
     
-    public void setDefaultForeground(Color color) {
-        data.setDefaultForeground(color);
-    }
-    
-    public void setDefaultBackground(Color color) {
-        data.setDefaultBackground(color);
+    public void setBackgroundColor(Color color) {
+        data.setBackgroundColor(color);
     }
     
     public void editItem(String item) {
         data.edit(item);
     }
-    
 }

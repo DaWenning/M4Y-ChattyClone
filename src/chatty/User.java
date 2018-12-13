@@ -285,16 +285,8 @@ public class User implements Comparable {
         addLine(new BanMessage(System.currentTimeMillis(), duration, reason, id));
     }
     
-    public synchronized void addMsgDeleted(String targetMsgId, String msg) {
-        addLine(new MsgDeleted(System.currentTimeMillis(), targetMsgId, msg));
-    }
-    
     public synchronized void addSub(String message, String text) {
         addLine(new SubMessage(System.currentTimeMillis(), message, text));
-    }
-    
-    public synchronized void addInfo(String message, String text) {
-        addLine(new InfoMessage(System.currentTimeMillis(), message, text));
     }
     
     public synchronized void addModAction(String commandAndParameters) {
@@ -864,8 +856,6 @@ public class User implements Comparable {
         public static final int SUB = 2;
         public static final int MOD_ACTION = 3;
         public static final int AUTO_MOD_MESSAGE = 4;
-        public static final int INFO = 5;
-        public static final int MSG_DELETED = 6;
         
         private final Long time;
         private final int type;
@@ -920,18 +910,6 @@ public class User implements Comparable {
         
     }
     
-    public static class MsgDeleted extends Message {
-        
-        public final String targetMsgId;
-        public final String msg;
-        
-        public MsgDeleted(Long time, String targetMsgId, String msg) {
-            super(MSG_DELETED, time);
-            this.targetMsgId = targetMsgId;
-            this.msg = msg;
-        }
-    }
-    
     public static class SubMessage extends Message {
         
         public final String attached_message;
@@ -939,18 +917,6 @@ public class User implements Comparable {
         
         public SubMessage(Long time, String message, String text) {
             super(SUB, time);
-            this.attached_message = message;
-            this.system_msg = text;
-        }
-    }
-    
-    public static class InfoMessage extends Message {
-        
-        public final String attached_message;
-        public final String system_msg;
-        
-        public InfoMessage(Long time, String message, String text) {
-            super(INFO, time);
             this.attached_message = message;
             this.system_msg = text;
         }

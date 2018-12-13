@@ -2,7 +2,6 @@
 package chatty.util.api;
 
 import chatty.Helper;
-import chatty.util.StringUtil;
 import chatty.util.TwitchEmotes.EmotesetInfo;
 import chatty.util.api.CommunitiesManager.CommunitiesListener;
 import chatty.util.api.CommunitiesManager.Community;
@@ -71,7 +70,7 @@ public class TwitchApi {
         userIDs = new UserIDs(this);
         communitiesManager = new CommunitiesManager(this);
         emoticonManager2 = new EmoticonManager2(resultListener, requests);
-        //getCommunityTop(r -> {});
+        getCommunityTop(r -> {});
     }
     
     
@@ -249,13 +248,15 @@ public class TwitchApi {
     /**
      * Verifies token, but only once the delay has passed. For automatic checks
      * instead of manual ones.
+     * 
+     * @param token 
      */
-    public void checkToken() {
-        if (!StringUtil.isNullOrEmpty(defaultToken) &&
+    public void checkToken(String token) {
+        if (token != null && !token.isEmpty() &&
                 (System.currentTimeMillis() - tokenLastChecked) / 1000 > TOKEN_CHECK_DELAY) {
             LOGGER.info("Checking token..");
             tokenLastChecked = Long.valueOf(System.currentTimeMillis());
-            requests.verifyToken(defaultToken);
+            requests.verifyToken(token);
         }
     }
     
@@ -267,9 +268,6 @@ public class TwitchApi {
         return defaultToken;
     }
     
-    public void revokeToken(String token) {
-        requests.revokeToken(token);
-    }
     
     //=========
     // User IDs
@@ -518,18 +516,4 @@ public class TwitchApi {
         requests.autoMod("deny", msgId, defaultToken);
     }
 
-    public void createStreamMarker(String stream, String description, StreamMarkerResult listener) {
-        userIDs.getUserIDsAsap(r -> {
-            if (r.hasError()) {
-                listener.streamMarkerResult("Failed to resolve channel id");
-            } else {
-                requests.createStreamMarker(r.getId(stream), description, defaultToken, listener);
-            }
-        }, stream);
-    }
-    
-    public interface StreamMarkerResult {
-        public void streamMarkerResult(String error);
-    }
-    
 }

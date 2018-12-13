@@ -101,17 +101,18 @@ public class StatusHistoryEntry {
         if (!Objects.equals(this.game, other.game)) {
             return false;
         }
-//        if (!Objects.equals(this.communities, other.communities)) {
-//            return false;
-//        }
+        if (!Objects.equals(this.communities, other.communities)) {
+            return false;
+        }
         return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 71 * hash + Objects.hashCode(this.title);
-        hash = 71 * hash + Objects.hashCode(this.game);
+        int hash = 5;
+        hash = 73 * hash + Objects.hashCode(this.title);
+        hash = 73 * hash + Objects.hashCode(this.game);
+        hash = 73 * hash + Objects.hashCode(this.communities);
         return hash;
     }
 

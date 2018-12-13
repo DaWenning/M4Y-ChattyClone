@@ -1,12 +1,9 @@
 
 package chatty.gui;
 
-import chatty.gui.components.textpane.ChannelTextPane.Attribute;
 import chatty.gui.components.textpane.ChannelTextPane.Setting;
-import chatty.gui.components.textpane.MyStyleConstants;
 import chatty.util.settings.Settings;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -14,10 +11,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Logger;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.text.*;
 
 /**
@@ -32,11 +25,8 @@ public class StyleManager implements StyleServer {
     public static final Set<String> settingNames = new HashSet<>(Arrays.asList(
             "font", "fontSize", "timestampEnabled", "emoticonsEnabled",
             "foregroundColor","infoColor","compactColor","backgroundColor",
-            "backgroundColor2", "alternateBackground", "messageSeparator",
-            "separatorColor", "bottomMargin",
             "inputBackgroundColor","inputForegroundColor","usericonsEnabled",
-            "timestamp","highlightColor","highlightBackgroundColor",
-            "highlightBackground", "showBanMessages","autoScroll",
+            "timestamp","highlightColor","showBanMessages","autoScroll",
             "deletedMessagesMode", "deletedMessagesMaxLength","searchResultColor",
             "lineSpacing", "bufferSize", "actionColored","combineBanMessages",
             "timestampTimezone", "autoScrollTimeout", "searchResultColor2",
@@ -46,7 +36,7 @@ public class StyleManager implements StyleServer {
             "colorCorrection", "banReasonAppended", "banDurationAppended",
             "banDurationMessage", "banReasonMessage", "displayNamesMode",
             "paragraphSpacing", "bufferSizes", "userlistFont",
-            "showImageTooltips", "highlightMatches",
+            "showImageTooltips",
             "inputHistoryMultirowRequireCtrl" // Not delievered through this
             ));
     
@@ -69,7 +59,6 @@ public class StyleManager implements StyleServer {
     private Color infoColor;
     
     private final Settings settings;
-    private final Component dummyComponent = new JDialog();
     
     public StyleManager(Settings settings) {
         this.settings = settings;
@@ -102,11 +91,9 @@ public class StyleManager implements StyleServer {
         
         Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
         
-        String fontFamily = settings.getString("font");
-        int fontSize = (int)settings.getLong("fontSize");
         baseStyle = new SimpleAttributeSet(defaultStyle);
-        StyleConstants.setFontFamily(baseStyle, fontFamily);
-        StyleConstants.setFontSize(baseStyle, fontSize);
+        StyleConstants.setFontFamily(baseStyle,settings.getString("font"));
+        StyleConstants.setFontSize(baseStyle,(int)settings.getLong("fontSize"));
         //StyleConstants.setBackground(baseStyle, new Color(20,20,20));
         
         standardStyle = new SimpleAttributeSet(baseStyle);
@@ -125,16 +112,12 @@ public class StyleManager implements StyleServer {
         // Divide by 10 so integer values can be used for this setting
         float spacing = settings.getLong("lineSpacing") / (float)10.0;
         StyleConstants.setLineSpacing(paragraphStyle, spacing);
-        paragraphStyle.addAttribute(Attribute.PARAGRAPH_SPACING, settings.getLong("paragraphSpacing"));
-        
-        MyStyleConstants.setBackground2(paragraphStyle,
-                settings.getBoolean("alternateBackground") ? makeColor("backgroundColor2", null) : null);
-        MyStyleConstants.setHighlightBackground(paragraphStyle,
-                settings.getBoolean("highlightBackground") ? makeColor("highlightBackgroundColor", null) : null);
-        MyStyleConstants.setSeparatorColor(paragraphStyle,
-                settings.getBoolean("messageSeparator") ? makeColor("separatorColor", null) : null);
-        MyStyleConstants.setFontHeight(paragraphStyle, dummyComponent.getFontMetrics(new Font(fontFamily, Font.PLAIN, fontSize)).getHeight());
-        MyStyleConstants.setHighlightMatchesEnabled(paragraphStyle, settings.getBoolean("highlightMatches"));
+        int paragraphSpacing = (int)settings.getLong("paragraphSpacing");
+        int topSpacing = paragraphSpacing / 3;
+        int bottomSpacing = (paragraphSpacing / 3)*2 + paragraphSpacing % 3;
+//        System.out.println(topSpacing+" "+bottomSpacing);
+        StyleConstants.setSpaceAbove(paragraphStyle, topSpacing);
+        StyleConstants.setSpaceBelow(paragraphStyle, bottomSpacing);
         
         other = new SimpleAttributeSet();
         addBooleanSetting(Setting.EMOTICONS_ENABLED, "emoticonsEnabled");
@@ -158,7 +141,6 @@ public class StyleManager implements StyleServer {
         addBooleanSetting(Setting.PAUSE_ON_MOUSEMOVE_CTRL_REQUIRED, "pauseChatOnMouseMoveCtrlRequired");
         addBooleanSetting(Setting.EMOTICONS_SHOW_ANIMATED, "showAnimatedEmotes");
         addBooleanSetting(Setting.COLOR_CORRECTION, "colorCorrection");
-        addLongSetting(Setting.BOTTOM_MARGIN, "bottomMargin");
         // Deleted Messages Settings
         String deletedMessagesMode = settings.getString("deletedMessagesMode");
         long deletedMessagesModeNumeric = 0;

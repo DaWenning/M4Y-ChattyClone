@@ -326,7 +326,7 @@ public class TwitchConnection {
      * for reconnecting.
      * 
      * @param server The server address to connect to
-     * @param serverPorts The server ports to connect to (comma-separated list)
+     * @param serverPorts The server ports to connect to (comma-seperated list)
      * @param username The username to use for connecting
      * @param password The password
      * @param autojoin The channels to join after connecting
@@ -996,84 +996,6 @@ public class TwitchConnection {
             }
         }
         
-        private class GiftedSubCombiner {
-            
-            private final int MAX_RECIPIENTS_PER_MESSAGE = 20;
-            private final int COMBINE_INTERVAL = 1000;
-            
-            private final List<String> recipients = new ArrayList<>();
-            private User gifter;
-            private String subPlan;
-            private String text;
-            private Timer timer;
-            
-            public synchronized void add(User user, String text, String message, int months, String emotes, MsgTags tags) {
-                String recipient = tags.get("msg-param-recipient-display-name");
-                String plan = tags.get("msg-param-sub-plan");
-                boolean outputDirectly = false;
-                if (message != null && !message.isEmpty()) {
-                    outputDirectly = true;
-                }
-                if (recipient == null || plan == null) {
-                    outputDirectly = true;
-                }
-                if (outputDirectly) {
-                    flush();
-                    listener.onSubscriberNotification(user, text, message, months, emotes);
-                    return;
-                }
-                if (gifter != user || !subPlan.equals(plan)) {
-                    flush();
-                }
-                if (recipients.size() == MAX_RECIPIENTS_PER_MESSAGE) {
-                    flush();
-                }
-                this.gifter = user;
-                this.subPlan = plan;
-                recipients.add(recipient);
-                if (recipients.size() == 1) {
-                    // First sub of this group
-                    this.text = text;
-                    timer = new Timer(true);
-                    timer.schedule(new TimerTask() {
-
-                        @Override
-                        public void run() {
-                            flush();
-                        }
-                    }, COMBINE_INTERVAL);
-                }
-            }
-            
-            private synchronized void flush() {
-                if (recipients.isEmpty()) {
-                    return;
-                }
-                StringBuilder b = new StringBuilder(text);
-                if (recipients.size() > 1) {
-                    b.append(" And also to: ");
-                    for (int i = 1; i < recipients.size(); i++) {
-                        String displayName = recipients.get(i);
-                        if (i > 1) {
-                            b.append(", ");
-                        }
-                        b.append(displayName);
-                    }
-                    b.append(" (").append(recipients.size()).append(" total)");
-                }
-                listener.onSubscriberNotification(gifter, b.toString(), null, -1, null);
-                this.gifter = null;
-                this.text = null;
-                this.subPlan = null;
-                recipients.clear();
-                timer.cancel();
-                timer = null;
-            }
-            
-        }
-        
-        private final GiftedSubCombiner giftedSubCombiner = new GiftedSubCombiner();
-        
         @Override
         void onUsernotice(String channel, String message, MsgTags tags) {
             if (tags.isEmpty()) {
@@ -1091,20 +1013,21 @@ public class TwitchConnection {
             }
             User user = userJoined(channel, login);
             updateUserFromTags(user, tags);
-            if (tags.isValueOf("msg-id", "resub", "sub", "subgift", "anonsubgift")) {
-                if (tags.isValueOf("msg-id", "subgift", "anonsubgift")) {
-                    giftedSubCombiner.add(user, text, message, months, emotes, tags);
-                } else {
-                    listener.onSubscriberNotification(user, text, message, months, emotes);
-                }
+            if (tags.isValue("msg-id", "resub") || tags.isValue("msg-id", "sub")
+                    || tags.isValue("msg-id", "subgift")) {
+                listener.onSubscriberNotification(user, text, message, months, emotes);
             } else if (tags.isValue("msg-id", "charity") && login.equals("twitch")) {
-                listener.onUsernotice("Charity", user, text, message, emotes);
+                info(channel, "[Charity] "+text);
             } else if (tags.isValue("msg-id", "raid")) {
-                listener.onUsernotice("Raid", user, text, message, emotes);
+                String m = text;
+                if (!message.isEmpty()) {
+                    m += " ["+message+"]";
+                }
+                info(channel, "[Raid] "+m);
             } else {
                 // Just output like this if unknown, since Twitch keeps adding
                 // new messages types for this
-                listener.onUsernotice("Usernotice", user, text, message, emotes);
+                info(channel, "[Usernotice] "+text);
             }
         }
 
@@ -1134,16 +1057,12 @@ public class TwitchConnection {
             } else {
                 info(channel, "[Info] " + text);
             }
-            if (text.startsWith("The VIPs of this channel are")) {
-                List<String> vipsList = TwitchCommands.parseModsList(text);
-                info(channel, "There are "+vipsList.size()+" VIPs on this channel.");
-            }
         }
 
         /**
          * Counts the moderators in the /mods response and outputs the count.
          *
-         * @param text The mesasge from jtv containing the comma-separated
+         * @param text The mesasge from jtv containing the comma-seperated
          * moderator list.
          * @param channel The channel the moderators list was received on, or
          * {@literal null} if the channel is unknown
@@ -1297,19 +1216,6 @@ public class TwitchConnection {
             } else {
                 // No nick specified means the channel is cleared
                 channelCleared(channel);
-            }
-        }
-        
-        @Override
-        public void onClearMsg(MsgTags tags, String channel, String msg) {
-            channel = StringUtil.toLowerCase(channel);
-            String login = tags.get("login");
-            String targetMsgId = tags.get("target-msg-id");
-            if (!StringUtil.isNullOrEmpty(login, targetMsgId)) {
-                User user = users.getUserIfExists(channel, login);
-                if (user != null) {
-                    listener.onMsgDeleted(user, targetMsgId, msg);
-                }
             }
         }
         
@@ -1479,8 +1385,6 @@ public class TwitchConnection {
         void onGlobalInfo(String message);
 
         void onBan(User user, long length, String reason, String targetMsgId);
-        
-        void onMsgDeleted(User user, String targetMsgId, String msg);
 
         void onRegistered();
         
@@ -1518,8 +1422,6 @@ public class TwitchConnection {
          * @param emotes The emotes tag, yet to be parsed (may be null)
          */
         void onSubscriberNotification(User user, String text, String message, int months, String emotes);
-        
-        void onUsernotice(String type, User user, String text, String message, String emotes);
         
         void onSpecialMessage(String name, String message);
         

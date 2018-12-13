@@ -1,17 +1,21 @@
 
 package chatty.gui.components.settings;
 
-import chatty.gui.GuiUtil;
+import chatty.gui.colors.UsercolorItem;
 import chatty.gui.HtmlColors;
 import chatty.gui.colors.ColorItem;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -23,33 +27,24 @@ import javax.swing.table.TableCellRenderer;
 /**
  *
  * @author tduva
- * @param <T>
  */
 public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
 
-    private final MyTableModel data;
-    private final ItemCreator<T> itemCreator;
+    private final MyTableModel data = new MyTableModel();
+    private final BiFunction<String, Color, T> createItem;
     private final ColorRenderer colorRenderer = new ColorRenderer();
-    private final MyItemEditor<T> editor;
     
     public ItemColorEditor(JDialog owner,
-            ItemCreator<T> itemCreator, boolean editBackground) {
+            BiFunction<String, Color, T> createItem) {
         super(SORTING_MODE_MANUAL, false);
-        this.itemCreator = itemCreator;
-        this.data = new MyTableModel(editBackground);
-        this.editor = new MyItemEditor<>(owner, itemCreator, editBackground);
-        
+        this.createItem = createItem;
         setModel(data);
-        setItemEditor(editor);
-        setRendererForColumn(1, colorRenderer);
-        if (editBackground) {
-            setRendererForColumn(2, colorRenderer);
-        }
+        setItemEditor(new MyItemEditor<T>(owner, createItem));
+        setDefaultRenderer(Color.class, colorRenderer);
     }
     
     public void edit(String item) {
-        // Create dummy object to find index of item to edit
-        T preset = itemCreator.createItem(item, Color.BLACK, true, Color.WHITE, true);
+        T preset = createItem.apply(item, Color.BLACK);
         int index = data.indexOf(preset);
         if (index == -1) {
             addItem(preset);
@@ -57,67 +52,63 @@ public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
             editItem(index);
         }
     }
-    
-    public void setDefaultForeground(Color color) {
-        colorRenderer.setDefaultForeground(color);
-        editor.setDefaultForeground(color);
-    }
    
-    public void setDefaultBackground(Color color) {
+    public void setBackgroundColor(Color color) {
         colorRenderer.setBackgroundColor(color);
-        editor.setDefaultBackground(color);
     }
     
     private static class MyTableModel<T extends ColorItem> extends ListTableModel<T> {
         
-        public MyTableModel(boolean editBackground) {
+        public MyTableModel() {
             super(new String[]{"Item", "Color"});
-            if (editBackground) {
-                setColumnNames(new String[]{"Item", "Foreground", "Background"});
-            }
         }
+
+//        public int indexOfId(String id) {
+//            return indexOf(new UsercolorItem(id, Color.BLACK));
+//        }
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
-            return get(rowIndex);
+            if (columnIndex == 0) {
+                return get(rowIndex);
+            } else {
+                return get(rowIndex).getColor();
+            }
         }
         
         @Override
         public String getSearchValueAt(int rowIndex, int columnIndex) {
             if (columnIndex == 0) {
                 return get(rowIndex).getId();
-            } else if (columnIndex == 1) {
-                return HtmlColors.getNamedColorString(get(rowIndex).getForeground());
             } else {
-                return HtmlColors.getNamedColorString(get(rowIndex).getBackground());
+                return HtmlColors.getNamedColorString(get(rowIndex).getColor());
             }
         }
         
         @Override
         public Class getColumnClass(int c) {
-            return ColorItem.class;
+            if (c == 0) {
+                return ColorItem.class;
+            } else {
+                return Color.class;
+            }
         }
         
     }
     
     /**
-     * Renderer for the foreground and background columns.
+     * Renderer for cells containing a {@code Color}. Used for the color column.
      */
     public static class ColorRenderer extends JLabel implements TableCellRenderer {
 
-        private Color defaultForeground;
-        private Color defaultBackground;
+        private Color backgroundColor;
         
         public ColorRenderer() {
             setOpaque(true);
         }
         
-        public void setDefaultForeground(Color color) {
-            this.defaultForeground = color;
-        }
-        
         public void setBackgroundColor(Color color) {
-            this.defaultBackground = color;
+            this.backgroundColor = color;
         }
 
         @Override
@@ -130,37 +121,26 @@ public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
                 return this;
             }
             
-            // Set colors based on what is currently set for this item
-            ColorItem item = (ColorItem) value;
-            Color foreground = item.getForegroundIfEnabled();
-            if (foreground == null) {
-                foreground = defaultForeground;
-            }
-            Color background = item.getBackgroundIfEnabled();
-            if (background == null) {
-                background = defaultBackground;
-            }
-            setForeground(foreground);
-            setBackground(background);
+            // Set text color
+            Color color = (Color) value;
+            setForeground(color);
             
             // Set text and tooltip text
-            Color settingColor = null;
-            if (column == 1) {
-                settingColor = item.getForegroundIfEnabled();
-            } else if (column == 2) {
-                settingColor = item.getBackgroundIfEnabled();
-            }
-            String output;
-            String tooltip;
-            if (settingColor == null) {
-                output = "(default)";
-                tooltip = "Using default color";
+            String namedColorString = HtmlColors.getNamedColorString(color);
+            String colorString = HtmlColors.getColorString(color);
+            setText(namedColorString);
+            if (namedColorString.equals(colorString)) {
+                setToolTipText(colorString);
             } else {
-                output = HtmlColors.getNamedColorString(settingColor);
-                tooltip = HtmlColors.getColorString(settingColor);
+                setToolTipText(namedColorString+" ("+colorString+")");
             }
-            setText(output);
-            setToolTipText(tooltip);
+            
+            // Set background color based on selection status
+            if (isSelected) {
+                setBackground(table.getSelectionBackground());
+            } else {
+                setBackground(backgroundColor);
+            }
             return this;
         }
 
@@ -168,32 +148,25 @@ public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
     
     public static class MyItemEditor<T extends ColorItem> implements ItemEditor<T> {
         
-        private final ItemCreator<T> itemCreator;
-        private final boolean editBackground;
+        private final BiFunction<String, Color, T> createItem;
         
         private final ColorChooser colorChooser;
         private final JDialog dialog;
         private final JTextField id = new JTextField(10);
+        private final JTextField color = new JTextField(10);
         private final JButton changeColor = new JButton("Select Color");
-        private final ColorSetting foreground;
-        private final ColorSetting background;
-        private final JCheckBox foregroundEnabled;
-        private final JCheckBox backgroundEnabled;
+        private Color currentColor;
+        
         private final JButton ok = new JButton("Done");
         private final JButton cancel = new JButton("Cancel");
         
-        private Color defaultForeground;
-        private Color defaultBackground;
-        boolean save;
-        
-        public MyItemEditor(JDialog owner, ItemCreator itemCreator,
-                boolean editBackground) {
-            this.itemCreator = itemCreator;
-            this.editBackground = editBackground;
-            this.colorChooser = new ColorChooser(owner);
+        public MyItemEditor(JDialog owner, BiFunction<String, Color, T> createItem) {
+            colorChooser = new ColorChooser(owner);
             dialog = new JDialog(owner);
             dialog.setTitle("Edit Item");
+            color.setEditable(false);
             dialog.setModal(true);
+            this.createItem = createItem;
             
             id.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -219,9 +192,12 @@ public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
                 public void actionPerformed(ActionEvent e) {
                     if (e.getSource() == ok) {
                         dialog.setVisible(false);
-                        save = true;
                     } else if (e.getSource() == cancel) {
+                        currentColor = null;
                         dialog.setVisible(false);
+                    } else if (e.getSource() == changeColor) {
+                        Color newColor = colorChooser.chooseColor(ColorChooser.FOREGROUND, currentColor, Color.WHITE, "Test", "Test");
+                        updateColor(newColor);
                     }
                 }
             };
@@ -230,56 +206,27 @@ public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
             cancel.addActionListener(listener);
             
             dialog.setLayout(new GridBagLayout());
-            GridBagConstraints gbc;
+            GridBagConstraints gbc = new GridBagConstraints();
             
-            dialog.add(new JLabel("Item:"),
-                    GuiUtil.makeGbc(0, 0, 1, 1));
-            gbc = GuiUtil.makeGbc(1, 0, 2, 1);
+            gbc.gridx = 0;
+            gbc.gridy = 0;
             gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.weightx = 1;
+            gbc.weightx = 0.5;
+            gbc.insets = new Insets(3, 3, 3, 3);
             dialog.add(id, gbc);
-            
-            foreground = new ColorSetting(ColorSetting.FOREGROUND, null, "Foreground", "Foreground Color", colorChooser);
-            background = new ColorSetting(ColorSetting.BACKGROUND, null, "Background", "Background Color", colorChooser);
-            foregroundEnabled = new JCheckBox("Enabled");
-            backgroundEnabled = new JCheckBox("Enabled");
-            
-            foreground.addListener(() -> updateColors());
-            background.addListener(() -> updateColors());
-            foregroundEnabled.addItemListener(e -> updateColors());
-            backgroundEnabled.addItemListener(e -> updateColors());
-            
-            dialog.add(foreground,
-                    GuiUtil.makeGbc(1, 1, 2, 1));
-            if (editBackground) {
-                dialog.add(background,
-                        GuiUtil.makeGbc(1, 2, 2, 1));
-                dialog.add(foregroundEnabled,
-                        GuiUtil.makeGbc(0, 1, 1, 1));
-                dialog.add(backgroundEnabled,
-                        GuiUtil.makeGbc(0, 2, 1, 1));
-            } else {
-                backgroundEnabled.setSelected(false);
-            }
-            
-            gbc = GuiUtil.makeGbc(1, 3, 1, 1);
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.weightx = 1;
+            gbc.gridx = 1;
+            dialog.add(color, gbc);
+            gbc.gridx = 2;
+            changeColor.setMargin(new Insets(0,8,0,8));
+            dialog.add(changeColor, gbc);
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            gbc.insets = new Insets(7, 2, 4, 2);
             dialog.add(ok, gbc);
-            dialog.add(cancel, GuiUtil.makeGbc(2, 3, 1, 1));
-            
+            gbc.gridx = 1;
+            dialog.add(cancel, gbc);
             dialog.pack();
             dialog.setResizable(false);
-        }
-        
-        public void setDefaultForeground(Color color) {
-            this.defaultForeground = color;
-            updateColors();
-        }
-        
-        public void setDefaultBackground(Color color) {
-            this.defaultBackground = color;
-            updateColors();
         }
         
         @Override
@@ -292,69 +239,32 @@ public class ItemColorEditor<T extends ColorItem> extends TableEditor<T> {
             dialog.setLocationRelativeTo(c);
             if (preset != null) {
                 id.setText(preset.getId());
-                setColors(preset.getForeground(), preset.getBackground());
-                foregroundEnabled.setSelected(preset.getForegroundEnabled());
-                backgroundEnabled.setSelected(preset.getBackgroundEnabled());
+                updateColor(preset.getColor());
             } else {
                 id.setText(null);
-                setColors(defaultForeground, defaultBackground);
-                foregroundEnabled.setSelected(true);
-                backgroundEnabled.setSelected(true);
+                color.setText(null);
             }
-            if (!editBackground) {
-                background.setSettingValue(null);
-                backgroundEnabled.setSelected(false);
-            }
-            updateColors();
+            updateButtons();
             id.requestFocusInWindow();
-            
-            // Save will be set to true when pressing the "OK" button
-            save = false;
             dialog.setVisible(true);
-            if (!id.getText().isEmpty() && save) {
-                return itemCreator.createItem(id.getText(),
-                        foreground.getSettingValueAsColor(),
-                        foregroundEnabled.isSelected(),
-                        background.getSettingValueAsColor(),
-                        backgroundEnabled.isSelected());
+            if (!id.getText().isEmpty() && currentColor != null) {
+                return createItem.apply(id.getText(), currentColor);
             }
             return null;
         }
         
-        private void setColors(Color foregroundColor, Color backgroundColor) {
-            foreground.setSettingValue(HtmlColors.getNamedColorString(foregroundColor));
-            background.setSettingValue(HtmlColors.getNamedColorString(backgroundColor));
-        }
-        
-        private void updateColors() {
-            if (foregroundEnabled.isSelected()) {
-                background.setBaseColor(foreground.getSettingValue());
-            } else {
-                background.setBaseColor(defaultForeground);
-            }
-            if (backgroundEnabled.isSelected()) {
-                foreground.setBaseColor(background.getSettingValue());
-            } else {
-                foreground.setBaseColor(defaultBackground);
-            }
-            background.setEnabled(backgroundEnabled.isSelected());
-            foreground.setEnabled(foregroundEnabled.isSelected());
+        private void updateColor(Color newColor) {
+            color.setForeground(newColor);
+            currentColor = newColor;
+            color.setText(HtmlColors.getNamedColorString(newColor));
             updateButtons();
         }
         
         private void updateButtons() {
-            boolean enabled = !id.getText().isEmpty()
-                    && (!foreground.getSettingValue().isEmpty() || !foregroundEnabled.isSelected())
-                    && (!background.getSettingValue().isEmpty() || !backgroundEnabled.isSelected());
+            boolean enabled = !id.getText().isEmpty() && currentColor != null;
             ok.setEnabled(enabled);
         }
         
-    }
-    
-    public interface ItemCreator<T> {
-        public T createItem(String item,
-                Color foreground, boolean foregroundEnabled,
-                Color background, boolean backgroundEnabled);
     }
     
 }

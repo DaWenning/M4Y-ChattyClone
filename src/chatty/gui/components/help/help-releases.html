@@ -52,62 +52,9 @@
     full list of changes.</p>
     
     <h2>
-        <a name="0.9.2">Version 0.9.2</a> <a name="latest">(This one!)</a> (2018-10-26)
+        <a name="0.9.2">Version 0.9.2</a> <a name="latest">(This one!)</a> (2018-05-??)
         <a href="#top" class="top">[back to top]</a>
     </h2>
-    <p>Highlights of this update include the changed Color Settings &amp; Chat
-        Layout (with various options for message background colors and more),
-        performance improvements (especially for animated GIFs) and the new
-        Update Dialog.</p>
-    
-    <pre>
-### Chat Layout/Colors
-- Improved Badge/Emote positioning and chat margins
-- Added support for alternating message backgrounds and message separators
-- Updated Chat Color settings, added more presets
-
-### More Chat
-- Improved chat scrolling performance
-- Improved Animated GIF performance
-- Emphasize Highlight/Ignore matches
-- Added tooltips to Emotes/Badges in chat
-- Added support for FrankerFaceZ Supporter badge
-- Improved output of Usernotice messages (Emote support for message part, output
-  unknown message types better)
-- Combine gifted subs messages to improve performance
-- Added chat filter to filter out parts of messages (as opposed to ignoring the
-  while messages)
-
-### Installing/Updating
-- Added new Update Dialog, easier updating process on Windows
-- Added option to include Betas in update notifications
-- Added Windows installers for more comfortable installation
-
-### Other
-- Removed Communities (Twitch hasn't released an API for Tags yet)
-- Added User Dialog pinning (if pinned the dialog stays open on the same user,
-  clicking on another user opens a new one)
-- Changed default User Dialog opening location
-- Added position value for Custom Usericons
-- Remember scroll position when navigating through help
-- Changed default window position and how dialogs move with main window
-- Added some more debug and system commands
-- Updated translations
-- Updated help
-
-### Bugfixes
-- Fixed scrolling chat with PageUp/Down while focus is on inputbox
-- Fixed exception occuring on some systems
-- Fixed Stream Chat scrolling
-- Fixed Stream Chat message timeout when timestamp is disabled
-- Fixed Desktop Notifications memory leak
-- Fixed Animated GIFs using resources even when not visible
-- Fixed Emoji TAB Completion eating following word sometimes
-- Fixed Twitch Emotes not appearing sometimes (same as Emotefix version)
-- Fixed error occuring due to some rare incompatible images
-- Fixed Highlight configuration (e.g. no notification) not carrying over to
-  follow-up Highlights
-    </pre>
     
     <h2>
         <a name="0.9.1">Version 0.9.1</a> (2018-04-02)
@@ -1191,7 +1138,7 @@ New features:
 Changes:
 - Changed message parsing to support "&lt;name&gt; is now hosting you" notification
   (only works on Twitch Client Version 3 though, see Settings - Advanced)
-- Added setting to specify the timezone of the timestamp separately from the
+- Added setting to specify the timezone of the timestamp seperately from the
   system timezone setting
 - Added kadgar.net to open live streams from the context menu
 - Added optional filter to remove combining characters used in some languages
@@ -1250,7 +1197,7 @@ Changes:
 - Added Ctrl+J shortcut for opening Join Dialog
 - Save Channel Favorites sort order between sessions
 - Increased number of saved lines per user from 20 to 100
-- Reorganized Settings Dialog a bit (Usericons/Emoticons on separate pages)
+- Reorganized Settings Dialog a bit (Usericons/Emoticons on seperate pages)
 - Added context menu to Race Id (blue link) in Race Viewer
 - Possibly improved debugging of emoticon loading errors a bit
 - Updated help
@@ -1273,7 +1220,7 @@ Bugfixes:
             username, addressbook category and channel, then choose whether to
             completely hide them, show how many were ignored every 30s (if any)
             or show which users where ignored. Ignored messages also get added
-            to a separate window so you can check them if you want to.</li>
+            to a seperate window so you can check them if you want to.</li>
         <li>Improved Update Notification.</li>
         <li><a href="help-livestreamer.html">Livestreamer</a> context menu
             quality selection customizable.</li>
@@ -1602,7 +1549,7 @@ Changes:
 <h3>Full Changelog</h3>
 <pre>Changes:
 - FrankerFaceZ: Show custom mod icons (available in some channels)
-- FrankerFaceZ settings, Emoticons/Icon settings separate
+- FrankerFaceZ settings, Emoticons/Icon settings seperate
 - Prevent dialogs that can open automatically (error messages) from
   stealing focus
 - Added chat buffer size setting
@@ -1685,7 +1632,7 @@ New features:
 
 Changes:
 - Nicks in JOIN/PART/MOD/UNMOD lines now clickable
-- Settings now saved in separate files for general settings, login data and
+- Settings now saved in seperate files for general settings, login data and
   history/favorites
 - Fixed tab colors, added indicator for new stream status
 - Added delay for global hotkey so it doesn't repeat as much if kept pressed

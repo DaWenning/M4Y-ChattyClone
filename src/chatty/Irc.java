@@ -400,13 +400,6 @@ public abstract class Irc {
                 }
             }
         }
-        else if (command.equals("CLEARMSG")) {
-            if (parameters.isChan(0)) {
-                String channel = parameters.get(0);
-                String message = parameters.getOrEmpty(1);
-                onClearMsg(tags, channel, message);
-            }
-        }
     }
     
     /**
@@ -630,8 +623,6 @@ public abstract class Irc {
     void onGlobalUserstate(MsgTags tags) { }
     
     void onClearChat(MsgTags tags, String channel, String name) { }
-    
-    void onClearMsg(MsgTags tags, String channel, String msg) { }
     
     void onChannelCommand(MsgTags tags, String nick, String channel, String command, String trailing) { }
     

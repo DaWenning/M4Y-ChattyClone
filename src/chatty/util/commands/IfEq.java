@@ -32,20 +32,13 @@ class IfEq implements Item {
     public String replace(Parameters parameters) {
         String value = identifier.replace(parameters);
         String compareTo = compare.replace(parameters);
-        if (value == null || compareTo == null) {
-            return null;
-        }
-        String output = "";
         if (Objects.equals(value, compareTo)) {
-            output = output1.replace(parameters);
+            return output1.replace(parameters, isRequired);
         }
-        else if (output2 != null) {
-            output = output2.replace(parameters);
+        if (output2 != null) {
+            return output2.replace(parameters, isRequired);
         }
-        if (!Item.checkReq(isRequired, output)) {
-            return null;
-        }
-        return output;
+        return isRequired ? null : "";
     }
 
     @Override
@@ -56,11 +49,6 @@ class IfEq implements Item {
     @Override
     public Set<String> getIdentifiersWithPrefix(String prefix) {
         return Item.getIdentifiersWithPrefix(prefix, identifier, compare, output1, output2);
-    }
-    
-    @Override
-    public Set<String> getRequiredIdentifiers() {
-        return Item.getRequiredIdentifiers(isRequired, identifier, compare, output1, output2);
     }
     
     @Override

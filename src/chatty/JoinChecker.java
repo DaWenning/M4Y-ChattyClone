@@ -2,7 +2,6 @@
 package chatty;
 
 import static chatty.Logging.USERINFO;
-import chatty.lang.Language;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -61,7 +60,7 @@ public class JoinChecker {
             @Override
             public void run() {
                 LOGGER.warning("Join may have failed ("+channel+")");
-                LOGGER.log(USERINFO, Language.getString("chat.error.joinFailed", channel));
+                LOGGER.log(USERINFO, "If you recently changed your Twitch username, try to <Main - Login.. - Verify login> and restart");
                 irc.joinChannel(channel);
             }
         }, delay*1000);

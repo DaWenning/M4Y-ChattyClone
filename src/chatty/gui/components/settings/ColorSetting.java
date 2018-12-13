@@ -6,15 +6,10 @@ import chatty.gui.HtmlColors;
 import chatty.lang.Language;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Set;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -41,11 +36,11 @@ public class ColorSetting extends JPanel implements StringSetting {
      * The name of the color setting that should be the base (background) for
      * this one.
      */
-    private String baseColorSetting;
+    private final String baseColorSetting;
     /**
      * The text field that stores the color code.
      */
-    private final JTextField textField =  new JTextField(6);
+    private JTextField textField =  new JTextField(7);
     /**
      * Preview
      */
@@ -63,7 +58,7 @@ public class ColorSetting extends JPanel implements StringSetting {
     private final Set<ColorSettingListener> listeners = new HashSet<>();
     
     private final ColorChooser colorChooser;
-    private final JButton chooseColor = new JButton();
+    private final JButton chooseColor = new JButton(Language.getString("settings.colors.button.choose"));
     
     /**
      * 
@@ -76,7 +71,6 @@ public class ColorSetting extends JPanel implements StringSetting {
      */
     public ColorSetting(final int type, String baseColorSetting,
             final String name, final String text, ColorChooser chooser) {
-        setLayout(new GridBagLayout());
         
         this.type = type;
         this.baseColorSetting = baseColorSetting;
@@ -87,8 +81,7 @@ public class ColorSetting extends JPanel implements StringSetting {
             preview.setText(" "+text);
             preview.setOpaque(true);
         }
-        preview.setToolTipText(name);
-        preview.setPreferredSize(new Dimension(120,20));
+        preview.setPreferredSize(new Dimension(160,20));
         
         // Choose color button action
         chooseColor.addActionListener(new ActionListener() {
@@ -99,13 +92,11 @@ public class ColorSetting extends JPanel implements StringSetting {
                 setSettingValue(result);
             }
         });
-        chooseColor.setMargin(new Insets(0, 0, 0, 0));
-        chooseColor.setIcon(new ImageIcon(ColorSetting.class.getResource("colorpicker.png")));
+        chooseColor.setMargin(GuiUtil.SMALL_BUTTON_INSETS);
         
         // Textfield settings
         textField.setEditable(false);
-        textField.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 3));
-        textField.setHorizontalAlignment(JTextField.RIGHT);
+        
         
         initiate();
     }
@@ -118,16 +109,9 @@ public class ColorSetting extends JPanel implements StringSetting {
      * Adds the components to the panel.
      */
     private void initiate() {
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.weightx = 1;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        add(preview, gbc);
-        gbc.gridy = 0;
-        gbc.gridwidth = 1;
-        add(textField, gbc);
-        gbc.weightx = 0;
-        add(chooseColor, gbc);
+        add(preview);
+        add(textField);
+        add(chooseColor);
     }
     
     public String getText() {
@@ -156,8 +140,6 @@ public class ColorSetting extends JPanel implements StringSetting {
         //System.out.println(baseColor);
         preview.setForeground(foregroundColor);
         preview.setBackground(backgroundColor);
-        textField.setForeground(foregroundColor);
-        textField.setBackground(backgroundColor);
     }
     
     /**
@@ -165,24 +147,9 @@ public class ColorSetting extends JPanel implements StringSetting {
      * 
      * @param baseColor 
      */
-    public void setBaseColor(String baseColor) {
+    public void update(String baseColor) {
         this.baseColor = baseColor;
         updated();
-    }
-    
-    public void setBaseColor(Color color) {
-        setBaseColor(HtmlColors.getColorString(color));
-    }
-    
-    public void setBaseColorSetting(String setting) {
-        this.baseColorSetting = setting;
-    }
-    
-    @Override
-    public void setEnabled(boolean enabled) {
-        preview.setEnabled(enabled);
-        textField.setEnabled(enabled);
-        chooseColor.setEnabled(enabled);
     }
 
     @Override
