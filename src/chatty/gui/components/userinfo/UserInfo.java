@@ -17,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URL;
 import java.util.Set;
 import javax.swing.*;
 
@@ -36,12 +37,20 @@ public class UserInfo extends JDialog {
     private final PastMessages pastMessages = new PastMessages();
 
     private final JButton closeButton = new JButton(Language.getString("dialog.button.close"));
+    private final JButton archiveButton = new JButton("Mod4You-Archiv");
+    private final JButton coinsButton = new JButton("Coins");
+    private final JButton nameChangesButton = new JButton("NameChanges");
+
     private final JCheckBox pinnedDialog = new JCheckBox(Language.getString("userDialog.setting.pin"));
     private final JCheckBox singleMessage = new JCheckBox(SINGLE_MESSAGE_CHECK);
     private final BanReasons banReasons;
     private final Buttons buttons;
 
-    private final ActionListener actionListener;
+
+    private final ActionListener actionListener_archive;
+    private final ActionListener actionListener_close;
+    private final ActionListener actionListener_coins;
+    private final ActionListener actionListener_namelog;
     
     private User currentUser;
     private String currentLocalUsername;
@@ -86,7 +95,7 @@ public class UserInfo extends JDialog {
             }
         });
         
-        actionListener = new ActionListener() {
+        actionListener_close = new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {

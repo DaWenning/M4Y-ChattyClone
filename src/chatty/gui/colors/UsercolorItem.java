@@ -5,7 +5,8 @@ import chatty.gui.HtmlColors;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashSet;
- * 
+import java.util.Set;
+ /*
  * @author tduva
  */
 public class UsercolorItem extends ColorItem {
@@ -30,6 +31,8 @@ public class UsercolorItem extends ColorItem {
 
     public UsercolorItem(String id, Color color) {
         super(id, color, true, null, false);
+        this.color = color;
+        this.id = id;
         
         if (id.startsWith("#")) {
             idColor = HtmlColors.decode(id, null);

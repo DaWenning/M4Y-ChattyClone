@@ -173,6 +173,7 @@ public class NotificationWindow {
                     }
                 }
                 close();
+            }
             public void mouseEntered(MouseEvent e) {
             }
             @Override
