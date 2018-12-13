@@ -9,6 +9,8 @@ import chatty.gui.components.LinkLabel;
 import chatty.gui.components.LinkLabelListener;
 import chatty.lang.Language;
 import chatty.util.Sound;
+import chatty.util.StringUtil;
+import chatty.util.api.TokenInfo;
 import chatty.util.api.usericons.Usericon;
 import chatty.util.settings.Setting;
 import chatty.util.settings.Settings;
@@ -98,6 +100,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         MSGCOLORS("Message Colors", Language.getString("settings.page.msgColors")),
         HIGHLIGHT("Highlight", Language.getString("settings.page.highlight")),
         IGNORE("Ignore", Language.getString("settings.page.ignore")),
+        FILTER("Filter", Language.getString("settings.page.filter")),
         HISTORY("History", Language.getString("settings.page.history")),
         NOTIFICATIONS("Notifications", Language.getString("settings.page.notifications")),
         SOUNDS("Sounds", Language.getString("settings.page.sound")),
@@ -112,7 +115,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         COMPLETION("TAB Completion", Language.getString("settings.page.completion")),
         CHAT("Chat", Language.getString("settings.page.chat")),
         NAMES("Names", Language.getString("settings.page.names")),
-        MODERATION("Moderation", Language.getString("settings.page.moderation"));
+        MODERATION("Moderation", Language.getString("settings.page.moderation")),
+        STREAM("Stream", Language.getString("settings.page.stream"));
         
         public final String name;
         public final String displayName;
@@ -155,6 +159,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             Page.NAMES,
             Page.HIGHLIGHT,
             Page.IGNORE,
+            Page.FILTER,
             Page.LOGGING,
         }));
         MENU.put(Page.WINDOW, Arrays.asList(new Page[]{
@@ -167,6 +172,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             Page.ADVANCED,
             Page.COMPLETION,
             Page.HISTORY,
+            Page.STREAM,
             Page.HOTKEYS,
         }));
     }
@@ -227,6 +233,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         cards.add(new ColorSettings(this, settings), Page.CHATCOLORS.name);
         cards.add(new HighlightSettings(this), Page.HIGHLIGHT.name);
         cards.add(new IgnoreSettings(this), Page.IGNORE.name);
+        cards.add(new FilterSettings(this), Page.FILTER.name);
         msgColorSettings = new MsgColorSettings(this);
         cards.add(msgColorSettings, Page.MSGCOLORS.name);
         cards.add(new HistorySettings(this), Page.HISTORY.name);
@@ -247,6 +254,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         cards.add(new ChatSettings(this), Page.CHAT.name);
         nameSettings = new NameSettings(this);
         cards.add(nameSettings, Page.NAMES.name);
+        cards.add(new StreamSettings(this), Page.STREAM.name);
 
         // Track current settings page
         currentlyShown = Page.MAIN;
@@ -312,7 +320,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     
     public void showSettings(String action, Object parameter) {
         loadSettings();
-        notificationSettings.setUserReadPermission(settings.getBoolean("token_user"));
+        notificationSettings.setUserReadPermission(settings.getList("scopes").contains(TokenInfo.Scope.USERINFO.scope));
         setLocationRelativeTo(owner);
         if (action != null) {
             editDirectly(action, parameter);
@@ -381,9 +389,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
     }
     
     public void updateBackgroundColor() {
-        Color color = HtmlColors.decode(getStringSetting("backgroundColor"));
-        usercolorSettings.setBackgroundColor(color);
-        msgColorSettings.setBackgroundColor(color);
+        Color foreground = HtmlColors.decode(getStringSetting("foregroundColor"));
+        msgColorSettings.setDefaultForeground(foreground);
+        Color background = HtmlColors.decode(getStringSetting("backgroundColor"));
+        usercolorSettings.setDefaultBackground(background);
+        msgColorSettings.setDefaultBackground(background);
     }
     
     /**
@@ -592,13 +602,16 @@ public class SettingsDialog extends JDialog implements ActionListener {
      * @param name The setting name
      * @return 
      */
-    protected JCheckBox addSimpleBooleanSetting(String name) {
+    protected SimpleBooleanSetting addSimpleBooleanSetting(String name) {
         return addSimpleBooleanSetting(name,
                 Language.getString("settings.boolean."+name),
                 Language.getString("settings.boolean."+name+".tip", false));
     }
     
-    protected JCheckBox addSimpleBooleanSetting(String name, String description, String tooltipText) {
+    protected SimpleBooleanSetting addSimpleBooleanSetting(String name, String description, String tooltipText) {
+        if (tooltipText != null && !tooltipText.isEmpty()) {
+            tooltipText = "<html><body>"+StringUtil.addLinebreaks(tooltipText, 70, true);
+        }
         SimpleBooleanSetting result = new SimpleBooleanSetting(description, tooltipText);
         booleanSettings.put(name,result);
         return result;
@@ -618,7 +631,16 @@ public class SettingsDialog extends JDialog implements ActionListener {
     }
     
     protected ComboStringSetting addComboStringSetting(String name, int size, boolean editable, String[] choices) {
-        ComboStringSetting result = new ComboStringSetting(choices);
+        Map<String, String> localizedChoices = new LinkedHashMap<>();
+        for (String choice : choices) {
+            String label = Language.getString("settings.string."+name+".option."+choice, false);
+            if (label != null) {
+                localizedChoices.put(choice, label);
+            } else {
+                localizedChoices.put(choice, choice);
+            }
+        }
+        ComboStringSetting result = new ComboStringSetting(localizedChoices);
         result.setEditable(editable);
         stringSettings.put(name, result);
         return result;
