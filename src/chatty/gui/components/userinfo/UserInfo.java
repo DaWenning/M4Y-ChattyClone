@@ -17,7 +17,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.net.URL;
 import java.util.Set;
 import javax.swing.*;
 
@@ -37,19 +36,13 @@ public class UserInfo extends JDialog {
     private final PastMessages pastMessages = new PastMessages();
 
     private final JButton closeButton = new JButton(Language.getString("dialog.button.close"));
-    private final JButton archiveButton = new JButton("Archiv");
-    private final JButton nameChangesButton = new JButton("Namenslog");
-    private final JButton coinsButton = new JButton("Coins");
-
-    private final JCheckBox pinnedDialog = new JCheckBox("Pin Dialog");
+    private final JCheckBox pinnedDialog = new JCheckBox(Language.getString("userDialog.setting.pin"));
     private final JCheckBox singleMessage = new JCheckBox(SINGLE_MESSAGE_CHECK);
     private final BanReasons banReasons;
     private final Buttons buttons;
 
-    private final ActionListener actionListener_close;
-    private final ActionListener actionListener_archive;
-    private final ActionListener actionListener_namelog;
-    private final ActionListener actionListener_coins;
+    private final ActionListener actionListener;
+    
     private User currentUser;
     private String currentLocalUsername;
     
@@ -87,22 +80,13 @@ public class UserInfo extends JDialog {
                 if (command == null) {
                     return;
                 }
-                User user = getUser();
-                String nick = user.getName();
-                String reason = getBanReason();
-                if (!reason.isEmpty()) {
-                    reason = " "+reason;
-                }
-                Parameters parameters = Parameters.create(nick+reason);
-                parameters.put("msg-id", getMsgId());
-                parameters.put("target-msg-id", getTargetMsgId());
-                parameters.put("automod-msg-id", getAutoModMsgId());
-                owner.anonCustomCommand(user.getRoom(), command, parameters);
+                
+                owner.anonCustomCommand(getUser().getRoom(), command, makeParameters());
                 owner.getActionListener().actionPerformed(e);
             }
         });
-
-        actionListener_close = new ActionListener() {
+        
+        actionListener = new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -206,7 +190,7 @@ public class UserInfo extends JDialog {
         gbc = makeGbc(0,6,3,1);
         gbc.insets = new Insets(0, 0, 0, 0);
         add(infoPanel,gbc);
-
+        
         gbc = makeGbc(0,8,3,1);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(10,5,3,5);
@@ -279,6 +263,24 @@ public class UserInfo extends JDialog {
         return null;
     }
     
+    private Parameters makeParameters() {
+        User user = getUser();
+        String nick = user.getName();
+        String reason = getBanReason();
+        if (!reason.isEmpty()) {
+            reason = " " + reason;
+        }
+        Parameters parameters = Parameters.create(nick + reason);
+        parameters.put("msg-id", getMsgId());
+        parameters.put("target-msg-id", getTargetMsgId());
+        parameters.put("automod-msg-id", getAutoModMsgId());
+        return parameters;
+    }
+    
+    private void updateButtons() {
+        buttons.updateButtonForParameters(makeParameters());
+    }
+    
     public void setFontSize(float size) {
         if (size != fontSize) {
             GuiUtil.setFontSize(size, this);
@@ -329,7 +331,7 @@ public class UserInfo extends JDialog {
             categoriesString = categories.toString();
         }
         String displayNickInfo = user.hasDisplayNickSet() ? "" : "*";
-        this.setTitle("User: "+user.toString()
+        this.setTitle(Language.getString("userDialog.title")+" "+user.toString()
                 +(user.hasCustomNickSet() ? " ("+user.getDisplayNick()+")" : "")
                 +(!user.hasRegularDisplayNick() ? " ("+user.getName()+")" : "")
                 +displayNickInfo
@@ -339,6 +341,7 @@ public class UserInfo extends JDialog {
         infoPanel.update(user);
         singleMessage.setEnabled(currentMsgId != null);
         updateModButtons();
+        updateButtons();
         buttons.updateAutoModButtons(autoModMsgId);
         finishDialog();
     }

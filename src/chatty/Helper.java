@@ -63,7 +63,7 @@ public class Helper {
     }
     
     /**
-     * Takes a Set of Strings and builds a single comma-seperated String of
+     * Takes a Set of Strings and builds a single comma-separated String of
      * streams out of it.
      * 
      * @param set
@@ -656,6 +656,8 @@ public class Helper {
         if (durationEnabled) {
             if (duration > 0) {
                 banInfo = String.format("(%s)", makeBanInfoDuration(duration));
+            } else if (duration == -2) {
+                banInfo = "(deleted)";
             } else if (includeBan) {
                 banInfo = "(banned)";
             }
