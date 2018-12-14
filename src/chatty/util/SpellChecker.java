@@ -44,7 +44,7 @@ public class SpellChecker {
         spelling.put(split[0], split[1]);
     }
 
-    public static String rewrite(String string) {
+    public String rewrite(String string) {
         String returner = "";
 
         String[] split = string.split(" ");

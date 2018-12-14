@@ -753,6 +753,7 @@ public class TwitchClient {
      * sending a message as well
      */
     private void sendMessage(String channel, String text, boolean allowCommandMessageLocally) {
+        text = Chatty.spellchecker.rewrite(text);
         if (c.sendSpamProtectedMessage(channel, text, false)) {
             User user = c.localUserJoined(channel);
             g.printMessage(user, text, false, null, 0);
