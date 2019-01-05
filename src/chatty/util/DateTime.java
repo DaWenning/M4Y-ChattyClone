@@ -20,6 +20,7 @@ public class DateTime {
     private static final SimpleDateFormat FULL_DATETIME = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss ZZ");
     private static final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm:ss");
     private static final SimpleDateFormat SDF2 = new SimpleDateFormat("HH:mm");
+    private static final SimpleDateFormat SDF3 = new SimpleDateFormat("HH:mm:ss/SSS");
     public static final long MINUTE = 60;
     public static final long HOUR = MINUTE * 60;
     public static final long DAY = HOUR * 24;
@@ -45,6 +46,10 @@ public class DateTime {
         return currentTime(SDF);
     }
     
+    public static String currentTimeExact() {
+        return currentTime(SDF3);
+    }
+    
     public static String currentTime(String format) {
         return currentTime(new SimpleDateFormat(format));
     }
@@ -68,6 +73,13 @@ public class DateTime {
     }
     
     public static String formatAccountAge(long time, Formatting... options) {
+        if (System.currentTimeMillis() - time > DAY*1000) {
+            return ago(time, 0, 1, DateTime.H, options);
+        }
+        return ago(time, 0, 1, 0, options);
+    }
+    
+    public static String formatAccountAgeVerbose(long time, Formatting... options) {
         if (System.currentTimeMillis() - time > DAY*1000) {
             return ago(time, 0, 2, DateTime.H, options);
         }
@@ -232,7 +244,7 @@ public class DateTime {
             boolean lastOne = shown >= max && max > 0
                     || left-1 <= lowerLimit && shown > 0;
             String timeName = timeNames[i+timeNames.length-times.length];
-            if (time == 1 && verbose) {
+            if (time == 1 && verbose && !(lastOne && lastOneExact)) {
                 timeName = timeName.substring(0, timeName.length() - 1);
             }
             if (lastOne && lastOneExact) {

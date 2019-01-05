@@ -9,6 +9,7 @@ import chatty.gui.MainGui;
 import chatty.User;
 import chatty.gui.components.menus.ContextMenuListener;
 import chatty.gui.components.textpane.ChannelTextPane;
+import chatty.gui.components.textpane.InfoMessage;
 import chatty.gui.components.textpane.Message;
 import chatty.util.StringUtil;
 import chatty.util.api.Emoticon;
@@ -305,6 +306,9 @@ public class Channel extends JPanel {
     
     @Override
     public String getToolTipText() {
+        if (room.getStreamId() != null) {
+            return room.getChannel()+" ("+room.getStreamId()+")";
+        }
         return room.getChannel();
     }
     
@@ -558,8 +562,8 @@ public class Channel extends JPanel {
             List<String> containing = new ArrayList<>();
             List<String> matched = new ArrayList<>();
             Pattern cSearch = Pattern.compile(
-                    search.substring(0, 1).toUpperCase(Locale.ENGLISH)
-                    + "(?i)" + search.substring(1)
+                    Pattern.quote(search.substring(0, 1).toUpperCase(Locale.ENGLISH))
+                    + "(?i)" + Pattern.quote(search.substring(1))
             );
             String searchMode = main.getSettings().getString("completionSearch");
             for (String item : data) {
@@ -732,6 +736,10 @@ public class Channel extends JPanel {
     
     public void printLine(String line) {
         text.printLine(line);
+    }
+    
+    public void printInfoMessage(InfoMessage message) {
+        text.printInfoMessage(message);
     }
     
     public void userBanned(User user, long duration, String reason, String id) {
