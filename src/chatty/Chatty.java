@@ -1,13 +1,13 @@
 
 package chatty;
 
-import chatty.splash.Splash;
-import chatty.util.*;
-
+import chatty.util.DateTime;
+import chatty.util.LogUtil;
+import chatty.util.MiscUtil;
+import chatty.util.SingleInstance;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.SwingUtilities;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
