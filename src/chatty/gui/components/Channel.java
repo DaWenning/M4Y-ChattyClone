@@ -927,6 +927,6 @@ public class Channel extends JPanel {
     /* MOD 4 YOU EDITS */
 
     private void sendText(String text) {
-        main.client.textInput(main.channels.getActiveChannel().getRoom(), text);
+        main.client.textInput(main.channels.getActiveChannel().getRoom(), text, null);
     }
 }
