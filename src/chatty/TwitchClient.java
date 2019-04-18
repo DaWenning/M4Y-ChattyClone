@@ -68,6 +68,8 @@ import chatty.util.irc.MsgTags;
 import chatty.util.settings.Settings;
 import chatty.util.settings.SettingsListener;
 import chatty.util.srl.SpeedrunsLive;
+import com.sun.codemodel.internal.JOp;
+
 import java.awt.Color;
 import java.io.File;
 import java.nio.file.Files;
@@ -1149,6 +1151,11 @@ public class TwitchClient {
                         result));
             }
         }
+        else if (command.equals("delete")) {
+            //JOptionPane.showMessageDialog(null, "TRYING DELETION", "DEBUG", JOptionPane.INFORMATION_MESSAGE);
+            c.sendSpamProtectedMessage(channel, "/delete " + parameters.get("msg-id"), false);
+        }
+
         
         //------
         // Other
@@ -1217,7 +1224,7 @@ public class TwitchClient {
         }
         else if (command.equals("readspelling")) {
             Chatty.spellchecker.readSpellingFile();
-            g.printLine("[Spelling] The spelling file was updated");
+            g.printLine("[Spelling] The spelling file was reloaded");
         }
         
         else if (c.command(channel, command, parameter, null)) {
@@ -1569,6 +1576,7 @@ public class TwitchClient {
             return;
         }
         String result = customCommands.command(command, parameters, room);
+        //JOptionPane.showMessageDialog(null, result, "DEBUG", JOptionPane.INFORMATION_MESSAGE);
         if (result == null) {
             g.printLine("Custom command: Insufficient parameters/data");
         } else if (result.isEmpty()) {

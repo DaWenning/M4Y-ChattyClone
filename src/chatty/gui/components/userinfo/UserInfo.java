@@ -95,7 +95,7 @@ public class UserInfo extends JDialog {
                 if (command == null) {
                     return;
                 }
-                
+                //JOptionPane.showMessageDialog(null, command.getCommandName() + "\n" + getMsgId(), "Debug: UserInfo", JOptionPane.INFORMATION_MESSAGE);
                 owner.anonCustomCommand(getUser().getRoom(), command, makeParameters());
                 owner.getActionListener().actionPerformed(e);
             }
