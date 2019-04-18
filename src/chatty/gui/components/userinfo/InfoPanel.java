@@ -3,12 +3,12 @@ package chatty.gui.components.userinfo;
 
 import chatty.Helper;
 import chatty.User;
-import chatty.gui.components.menus.ChannelContextMenu;
 import chatty.gui.components.menus.ContextMenu;
 import chatty.gui.components.menus.ContextMenuListener;
 import chatty.util.colors.HtmlColors;
 import chatty.lang.Language;
 import chatty.util.DateTime;
+import chatty.util.StringUtil;
 import chatty.util.api.ChannelInfo;
 import chatty.util.api.Follower;
 import chatty.util.api.TwitchApi;
@@ -19,7 +19,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
+import javax.swing.Timer;
 
 /**
  *
@@ -37,7 +37,7 @@ public class InfoPanel extends JPanel {
     
     private final JLabel createdAt = new JLabel("Loading..");
     private final JLabel followers = new JLabel();
-    private final JLabel userId = new JLabel();
+    private final JLabel firstSeen = new JLabel();
     private final JLabel followedAt = new JLabel();
 
     private User currentUser;
@@ -47,33 +47,53 @@ public class InfoPanel extends JPanel {
     public InfoPanel(UserInfo owner, ContextMenuListener listener) {
         this.owner = owner;
         
-        panel1.setLayout(new FlowLayout(FlowLayout.CENTER, 8, 2));
-        panel2.setLayout(new FlowLayout(FlowLayout.CENTER, 8, 2));
+        panel1.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 2));
+        panel2.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 1));
         
         panel1.add(numberOfLines);
-        panel1.add(colorInfo);
+        panel1.add(firstSeen);
         panel1.add(followedAt);
         
-        panel2.add(userId);
+        panel2.add(colorInfo);
         panel2.add(followers);
         panel2.add(createdAt);
         
-        userId.setComponentPopupMenu(new DataContextMenu("userid", listener));
+        //firstSeen.setComponentPopupMenu(new DataContextMenu("userid", listener));
         followedAt.setComponentPopupMenu(new DataContextMenu("following", listener));
         createdAt.setComponentPopupMenu(new DataContextMenu("account", listener));
 
         setLayout(new GridBagLayout());
         add(panel1, Util.makeGbc(0, 0, 1, 1));
         add(panel2, Util.makeGbc(0, 1, 1, 1));
+        
+        Timer updateTimer = new Timer(60*1000, e -> updateTimes(false));
+        updateTimer.setRepeats(true);
+        updateTimer.start();
     }
     
     public void update(User user) {
         if (user != currentUser) {
+            currentUser = user;
             showInfo();
         }
-        currentUser = user;
         numberOfLines.setText("Messages: "+user.getNumberOfMessages());
         updateColor();
+        updateTimes(true);
+    }
+    
+    private void updateTimes(boolean force) {
+        if (!owner.isVisible() && !force) {
+            return;
+        }
+        if (currentUser != null) {
+            firstSeen.setText(String.format("First seen: %s ago",
+                    formatAgoTime(currentUser.getCreatedAt())));
+            firstSeen.setToolTipText(String.format("<html>First seen: %s ago (%s)"
+                    + "<br /><br />"
+                    + "(Could mean the first message or when the user first joined, during this Chatty session)",
+                    formatAgoTimeVerbose(currentUser.getCreatedAt()),
+                    DateTime.formatFullDatetime(currentUser.getCreatedAt())));
+        }
     }
     
     private void updateColor() {
@@ -119,8 +139,6 @@ public class InfoPanel extends JPanel {
             createdAt.setToolTipText(null);
             followers.setText(null);
             panel2.setToolTipText(null);
-            userId.setText(null);
-            userId.setToolTipText(null);
         } else {
             setChannelInfo(requestedInfo);
         }
@@ -148,17 +166,32 @@ public class InfoPanel extends JPanel {
     //                DateTime.formatFullDatetime(info.createdAt)));
             followers.setText(Language.getString("userDialog.followers",
                     Helper.formatViewerCount(info.followers)));
-            userId.setText(Language.getString("userDialog.id", info.id));
-            String tooltip = String.format("<html><em>Channel Info</em><br />"
-                    + "Title: %s<br />"
-                    + "Category: %s<br />"
-                    + "Views: %s<br />"
-                    + "Registered: %s ago (%s)<br /><br />"
+            String tooltip = String.format("<html>"
+                    + "Registered: %6$s ago (%7$s)<br />"
+                    + "ID: %8$s<br />"
+                    + "Type: %9$s<br />"
+                    + "<br />"
+                    + "Title: %2$s<br />"
+                    + "Category: %3$s<br />"
+                    + "Views: %4$s<br />"
+                    + "Followers: %5$s<br />"
+                    + "<br />"
+                    + "%1$s<br />"
+                    + "<br />"
                     + "(Info may not be entirely up-to-date)",
-                    info.status, info.game, Helper.formatViewerCount(info.views),
+                    !StringUtil.isNullOrEmpty(info.description)
+                            ? StringUtil.addLinebreaks(info.description, 70, true)
+                            : "No description",
+                    info.status,
+                    info.game,
+                    Helper.formatViewerCount(info.views),
+                    Helper.formatViewerCount(info.followers),
                     formatAgoTimeVerbose(info.createdAt),
-                    DateTime.formatFullDatetime(info.createdAt));
-            userId.setToolTipText(tooltip);
+                    DateTime.formatFullDatetime(info.createdAt),
+                    info.id,
+                    !StringUtil.isNullOrEmpty(info.broadcaster_type)
+                            ? StringUtil.firstToUpperCase(info.broadcaster_type)
+                            : "Regular");
             followers.setToolTipText(tooltip);
             createdAt.setToolTipText(tooltip);
 
@@ -193,12 +226,11 @@ public class InfoPanel extends JPanel {
     }
     
     private static String formatAgoTime(long time) {
-        return DateTime.formatAccountAge(time, DateTime.Formatting.VERBOSE,
-                DateTime.Formatting.LAST_ONE_EXACT);
+        return DateTime.formatAccountAgeCompact(time);
     }
     
     private static String formatAgoTimeVerbose(long time) {
-        return DateTime.formatAccountAgeVerbose(time, DateTime.Formatting.VERBOSE);
+        return DateTime.formatAccountAgeVerbose(time);
     }
     
     protected String getFollowAge() {
@@ -229,6 +261,13 @@ public class InfoPanel extends JPanel {
         return null;
     }
     
+    protected String getChannelInfoTooltipText() {
+        if (currentChannelInfo != null) {
+            return createdAt.getToolTipText().replace("<br />", "\n").replace("<html>", "");
+        }
+        return null;
+    }
+    
     /**
      * Indiciate that the follow age data is being loaded.
      */
@@ -246,13 +285,16 @@ public class InfoPanel extends JPanel {
             if (type.equals("userid")) {
                 addItem("copyUserId", "Copy User ID");
             } else if (type.equals("following")) {
-                addItem("sendFollowAge", "Send Follow age message");
-                addItem("copyFollowAge", "Copy Follow age");
+                addItem("sendFollowAge", "Send Follow Age message");
+                addItem("copyFollowAge", "Copy Follow Age");
                 addSeparator();
                 addItem("refresh", "Refresh");
             } else if (type.equals("account")) {
-                addItem("sendAccountAge", "Send Account age message");
-                addItem("copyAccountAge", "Copy Account age");
+                addItem("sendAccountAge", "Send Account Age message");
+                addItem("copyAccountAge", "Copy Account Age");
+                addSeparator();
+                addItem("copyUserId", "Copy ID");
+                addItem("copyChannelInfo", "Copy Full Info (Tooltip)");
             }
         }
         
@@ -264,7 +306,7 @@ public class InfoPanel extends JPanel {
     }
     
     protected static final CustomCommand COMMAND_FOLLOW_AGE =
-            CustomCommand.parse("$$1 has been following for $$(followage)");
+            CustomCommand.parse("$$(nick) has been following for $$(followage)");
     protected static final CustomCommand COMMAND_ACCOUNT_AGE =
-            CustomCommand.parse("$$1 has been registered for $$(accountage)");
+            CustomCommand.parse("$$(nick) has been registered for $$(accountage)");
 }

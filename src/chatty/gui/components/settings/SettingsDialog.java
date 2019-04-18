@@ -609,12 +609,20 @@ public class SettingsDialog extends JDialog implements ActionListener {
     }
     
     protected SimpleBooleanSetting addSimpleBooleanSetting(String name, String description, String tooltipText) {
-        if (tooltipText != null && !tooltipText.isEmpty()) {
-            tooltipText = "<html><body>"+StringUtil.addLinebreaks(tooltipText, 70, true);
-        }
-        SimpleBooleanSetting result = new SimpleBooleanSetting(description, tooltipText);
+        SimpleBooleanSetting result = makeSimpleBooleanSetting(description, tooltipText);
         booleanSettings.put(name,result);
         return result;
+    }
+    
+    protected SimpleBooleanSetting makeSimpleBooleanSetting(String labelName) {
+        return makeSimpleBooleanSetting(
+                Language.getString("settings.label."+labelName),
+                Language.getString("settings.label."+labelName+".tip", false));
+    }
+    
+    protected SimpleBooleanSetting makeSimpleBooleanSetting(String description, String tooltipText) {
+        tooltipText = SettingsUtil.addTooltipLinebreaks(tooltipText);
+        return new SimpleBooleanSetting(description, tooltipText);
     }
     
     protected void setBooleanSetting(String name, Boolean value) {
@@ -659,7 +667,12 @@ public class SettingsDialog extends JDialog implements ActionListener {
     }
     
     protected JTextField addSimpleStringSetting(String settingName, int size, boolean editable) {
-        SimpleStringSetting s = new SimpleStringSetting(size, editable);
+        return addSimpleStringSetting(settingName, size, editable, null);
+    }
+    
+    protected JTextField addSimpleStringSetting(String settingName, int size,
+            boolean editable, DataFormatter<String> formatter) {
+        SimpleStringSetting s = new SimpleStringSetting(size, editable, formatter);
         addStringSetting(settingName, s);
         return s;
     }
@@ -802,6 +815,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         table.setPreferredSize(new Dimension(width, height));
         mapSettings.put(name, table);
         return table;
+    }
+    
+    protected JLabel createLabel(String settingName) {
+        String text = Language.getString("settings.label."+settingName);
+        String tip = Language.getString("settings.label."+settingName+".tip", false);
+        JLabel label = new JLabel(text);
+        label.setToolTipText(SettingsUtil.addTooltipLinebreaks(tip));
+        return label;
     }
     
     protected void clearHistory() {

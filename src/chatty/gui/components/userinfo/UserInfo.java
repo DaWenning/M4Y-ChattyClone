@@ -87,7 +87,8 @@ public class UserInfo extends JDialog {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (settings.getBoolean("closeUserDialogOnAction")) {
+                if (settings.getBoolean("closeUserDialogOnAction")
+                        && !isPinned()) {
                     setVisible(false);
                 }
                 CustomCommand command = getCommand(e.getSource());
@@ -172,7 +173,7 @@ public class UserInfo extends JDialog {
         gbc = makeGbc(2,1,1,1);
         gbc.insets = new Insets(2, 8, 2, 8);
         gbc.anchor = GridBagConstraints.EAST;
-        pinnedDialog.setToolTipText("Pinned dialogs stay open on the same user until closed");
+        pinnedDialog.setToolTipText(Language.getString("userDialog.setting.pin.tip"));
         topPanel.add(pinnedDialog, gbc);
         
         JComboBox<String> reasons = new JComboBox<>();
@@ -224,17 +225,20 @@ public class UserInfo extends JDialog {
                         infoPanel.setRefreshingFollowAge();
                         getFollowInfo(true);
                         break;
+                    case "copyChannelInfo":
+                        MiscUtil.copyToClipboard(infoPanel.getChannelInfoTooltipText());
+                        break;
                 }
             }
             
         });
         gbc = makeGbc(0,6,3,1);
-        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.insets = new Insets(2, 0, 0, 0);
         add(infoPanel,gbc);
         
         gbc = makeGbc(0,8,3,1);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(10,5,3,5);
+        gbc.insets = new Insets(8,5,3,5);
         add(closeButton,gbc);
 
         gbc = makeGbc(0,9,1,1);
@@ -312,6 +316,9 @@ public class UserInfo extends JDialog {
             reason = " " + reason;
         }
         Parameters parameters = Parameters.create(nick + reason);
+        parameters.put("nick", user.getRegularDisplayNick());
+        parameters.put("reason", reason);
+        parameters.put("msg", getMsg());
         parameters.put("msg-id", getMsgId());
         parameters.put("target-msg-id", getTargetMsgId());
         parameters.put("automod-msg-id", getAutoModMsgId());
@@ -323,8 +330,37 @@ public class UserInfo extends JDialog {
         return parameters;
     }
     
+    /**
+     * This has to be called after any updates to the active User, button
+     * settings or other dialog parameters that could affect buttons, in order
+     * to hide/show/activate/deactive buttons.
+     */
     protected void updateButtons() {
+        if (currentUser == null) {
+            return;
+        }
+        
+        //------------
+        // Parameters
+        //------------
         buttons.updateButtonForParameters(makeParameters());
+        
+        //------------------
+        // Mod/Unmod Button
+        //------------------
+        boolean localIsStreamer = currentUser.getStream() != null
+                && currentUser.getStream().equalsIgnoreCase(currentLocalUsername);
+        buttons.updateModButtons(localIsStreamer, currentUser.isModerator());
+        
+        //---------
+        // AutoMod
+        //---------
+        buttons.updateAutoModButtons(currentAutoModMsgId);
+        
+        //--------
+        // Finish
+        //--------
+        buttons.updateButtonRows();
     }
     
     public void setFontSize(float size) {
@@ -345,7 +381,7 @@ public class UserInfo extends JDialog {
      */
     public void setUserDefinedButtonsDef(String def) {
         buttons.set(def);
-        updateModButtons();
+        updateButtons();
         GuiUtil.setFontSize(fontSize, this);
         // Pack because otherwise the dialog won't be sized correctly when
         // displaying it for the first time (not sure why)
@@ -386,24 +422,17 @@ public class UserInfo extends JDialog {
         pastMessages.update(user, currentMsgId != null ? currentMsgId : currentAutoModMsgId);
         infoPanel.update(user);
         singleMessage.setEnabled(currentMsgId != null);
-        updateModButtons();
         updateButtons();
-        buttons.updateAutoModButtons(autoModMsgId);
         finishDialog();
-    }
-    
-    public void updateModButtons() {
-        if (currentUser == null) {
-            return;
-        }
-        boolean localIsStreamer = currentUser.getStream() != null
-                && currentUser.getStream().equalsIgnoreCase(currentLocalUsername);
-        buttons.updateModButtons(localIsStreamer, currentUser.isModerator());
     }
 
     public void show(Component owner, User user, String msgId, String autoModMsgId, String localUsername) {
         if (user == currentUser && isVisible()) {
-            GuiUtil.shake(this);
+            if (Objects.equals(currentMsgId, msgId)) {
+                GuiUtil.shake(this, 2, 2);
+            } else {
+                GuiUtil.shake(this, 1, 1);
+            }
         }
         banReasons.updateReasonsFromSettings();
         banReasons.reset();
@@ -437,6 +466,13 @@ public class UserInfo extends JDialog {
     
     public String getMsgId() {
         return currentMsgId;
+    }
+    
+    public String getMsg() {
+        if (currentUser != null) {
+            return currentUser.getMessageText(currentMsgId);
+        }
+        return null;
     }
     
     public String getTargetMsgId() {

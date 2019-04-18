@@ -194,6 +194,8 @@ public class SettingsManager {
         settings.addLong("displayNamesMode", DISPLAY_NAMES_MODE_BOTH);
         settings.addLong("displayNamesModeUserlist", DISPLAY_NAMES_MODE_CAPITALIZED);
         settings.addBoolean("showImageTooltips", true);
+        settings.addLong("mentions", 3);
+        settings.addLong("markHoveredUser", chatty.gui.components.textpane.SettingConstants.USER_HOVER_HL_MENTIONS);
 
         // Badges/Emotes
         settings.addBoolean("emoticonsEnabled",true);
@@ -211,7 +213,7 @@ public class SettingsManager {
         
         settings.addString("emoji", "twemoji");
         settings.addBoolean("emojiReplace", true);
-        settings.addString("cheersType", "static");
+        settings.addString("cheersType", "animated");
 
         settings.addBoolean("usericonsEnabled", true);
         
@@ -284,6 +286,8 @@ public class SettingsManager {
         
         settings.addBoolean("closeUserDialogOnAction", true);
         settings.addBoolean("openUserDialogByMouse", true);
+        settings.addBoolean("reuseUserDialog", false);
+        settings.addLong("clearUserMessages", 12);
 
         // History / Favorites
         settings.addMap("channelHistory",new TreeMap(), Setting.LONG);
@@ -303,11 +307,9 @@ public class SettingsManager {
 
         // Game Presets
         settings.addList("gamesFavorites",new ArrayList(), Setting.STRING);
-        //settings.setFile("gamesFavorites", historyFile);
         
-        // Community Presets
-        settings.addMap("communityFavorites", new HashMap(), Setting.STRING);
-        //settings.setFile("communityFavorites", historyFile);
+        // Tags Presets
+        settings.addMap("tagsFavorites", new HashMap(), Setting.STRING);
 
         // Stream Status Presets
         settings.addList("statusPresets", new ArrayList(), Setting.LIST);
@@ -340,10 +342,12 @@ public class SettingsManager {
         settings.addBoolean("bufferStrategy1", false);
         settings.addBoolean("mainResizable", true);
         settings.addBoolean("splash", true);
+        settings.addBoolean("hideStreamsOnMinimize", true);
         
         // Tray
         settings.addBoolean("closeToTray", false);
         settings.addBoolean("minimizeToTray", false);
+        settings.addBoolean("trayIconAlways", false);
         
         // Window State
         settings.addMap("windows", new HashMap<>(), Setting.STRING);
@@ -492,6 +496,7 @@ public class SettingsManager {
         settings.addList("noHighlightUsers", new ArrayList(), Setting.STRING);
         settings.addList("highlightBlacklist", new ArrayList(), Setting.STRING);
         settings.addBoolean("highlightMatches", true);
+        settings.addBoolean("highlightMatchesAll", true);
 
         // Ignore
         settings.addList("ignore", new ArrayList(), Setting.STRING);
@@ -575,9 +580,11 @@ public class SettingsManager {
         settings.addString("livestreamerCommand", "livestreamer");
         settings.addBoolean("livestreamerUseAuth", false);
         settings.addBoolean("livestreamerShowDialog", true);
+        settings.addBoolean("livestreamerAutoCloseDialog", true);
 
         // Stream Highlights
         settings.addString("streamHighlightCommand", "!highlight");
+        settings.addString("streamHighlightMatch", "status:bm");
         settings.addString("streamHighlightChannel", "");
         settings.addBoolean("streamHighlightChannelRespond", false);
         settings.addBoolean("streamHighlightMarker", true);

@@ -267,6 +267,9 @@ public class MainGui extends JFrame implements Runnable {
         // Tray/Notifications
         trayIcon = new TrayIconManager(createImage("app_main_16.png"));
         trayIcon.addActionListener(new TrayMenuListener());
+        if (client.settings.getBoolean("trayIconAlways")) {
+            trayIcon.setIconVisible(true);
+        }
         notificationWindowManager = new NotificationWindowManager<>(this);
         notificationWindowManager.setNotificationActionListener(new MyNotificationActionListener());
         notificationManager = new NotificationManager(this, client.settings, client.addressbook);
@@ -314,7 +317,6 @@ public class MainGui extends JFrame implements Runnable {
         menu = new MainMenu(menuListener,menuListener, linkLabelListener);
         setJMenuBar(menu);
 
-        state.update();
         addListeners();
         pack();
         
@@ -586,6 +588,15 @@ public class MainGui extends JFrame implements Runnable {
             }
         });
         
+        addMenuAction("dialog.favorites", "Dialog: Favorites / History (toggle)",
+                KeyEvent.VK_F, new AbstractAction() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleFavoritesDialog();
+            }
+        });
+        
         addMenuAction("dialog.updates", "Dialog: Updates",
                 KeyEvent.VK_U, new AbstractAction() {
 
@@ -705,7 +716,23 @@ public class MainGui extends JFrame implements Runnable {
             }
         });
         
-        hotkeyManager.registerAction("stream.addhighlight", "Stream: Add Stream Highlight", new AbstractAction() {
+        hotkeyManager.registerAction("commercial.120", "Run commercial (120s)", new AbstractAction() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                runCommercial(120);
+            }
+        });
+        
+        hotkeyManager.registerAction("commercial.180", "Run commercial (180s)", new AbstractAction() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                runCommercial(180);
+            }
+        });
+
+        addMenuAction("stream.addhighlight", "Stream: Add Stream Highlight", KeyEvent.VK_A, new AbstractAction() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -804,6 +831,8 @@ public class MainGui extends JFrame implements Runnable {
                 if (!guiCreated) {
                     return;
                 }
+                
+                startUpdatingState();
                 
                 channels.setInitialFocus();
                 
@@ -1234,6 +1263,19 @@ public class MainGui extends JFrame implements Runnable {
         return client.settings.getBoolean("saveStatusHistory");
     }
     
+    /**
+     * Should be thread-safe.
+     * 
+     * @param input
+     * @return 
+     */
+    public String replaceEmojiCodes(String input) {
+        if (client.settings.getBoolean("emojiReplace")) {
+            return emoticons.emojiReplace(input);
+        }
+        return input;
+    }
+    
     class MyActionListener implements ActionListener {
 
         @Override
@@ -1241,11 +1283,7 @@ public class MainGui extends JFrame implements Runnable {
             // text input
             Channel chan = channels.getChannelFromInput(event.getSource());
             if (chan != null) {
-                if (client.settings.getBoolean("emojiReplace")) {
-                    client.textInput(chan.getRoom(), emoticons.emojiReplace(chan.getInputText()), null);
-                } else {
-                    client.textInput(chan.getRoom(), chan.getInputText(), null);
-                }
+                client.textInput(chan.getRoom(), chan.getInputText(), null);
             }
 
             Object source = event.getSource();
@@ -1380,7 +1418,11 @@ public class MainGui extends JFrame implements Runnable {
         public void actionPerformed(ActionEvent e) {
             String cmd = e.getActionCommand();
             if (cmd == null || cmd.equals("show")) {
-                makeVisible();
+                if (isMinimized()) {
+                    makeVisible();
+                } else {
+                    minimizeToTray();
+                }
             }
             else if (cmd.equals("exit")) {
                 exit();
@@ -1434,8 +1476,6 @@ public class MainGui extends JFrame implements Runnable {
                 }
             } else if (cmd.equals("website")) {
                 UrlOpener.openUrlPrompt(MainGui.this, Chatty.WEBSITE, true);
-            } else if (cmd.equals("favoritesDialog")) {
-                openFavoritesDialogToJoin("");
             } else if (cmd.equals("unhandledException")) {
                 String[] array = new String[0];
                 String a = array[1];
@@ -1592,6 +1632,8 @@ public class MainGui extends JFrame implements Runnable {
             }
             else if (cmd.startsWith("command")) {
                 Parameters parameters = Parameters.create(user.getRegularDisplayNick());
+                parameters.put("nick", user.getName());
+                parameters.put("msg", user.getMessageText(msgId));
                 parameters.put("msg-id", msgId);
                 parameters.put("automod-msg-id", autoModMsgId);
                 customCommand(user.getRoom(), e, parameters);
@@ -2513,6 +2555,14 @@ public class MainGui extends JFrame implements Runnable {
         return new HashSet<>();
     }
     
+    private void toggleFavoritesDialog() {
+        if (favoritesDialog.isVisible()) {
+            favoritesDialog.setVisible(false);
+        } else {
+            openFavoritesDialogToJoin("");
+        }
+    }
+    
     private void openFavoritesDialogToJoin(String channel) {
         favoritesDialog.setLocationRelativeTo(this);
         int result = favoritesDialog.showDialog(channel);
@@ -2851,12 +2901,11 @@ public class MainGui extends JFrame implements Runnable {
         });
     }
     
-    public void printSubscriberMessage(final User user,
-            final String text, final String message, final int months,
-            final String emotes) {
+    public void printSubscriberMessage(final User user, final String text,
+            final String message, final String emotes) {
         SwingUtilities.invokeLater(() -> {
             Emoticons.TagEmotes tagEmotes = Emoticons.parseEmotesTag(emotes);
-            SubscriberMessage m = new SubscriberMessage(user, text, message, months, tagEmotes);
+            SubscriberMessage m = new SubscriberMessage(user, text, message, tagEmotes);
 
             boolean printed = printUsernotice(m);
             if (printed) {
@@ -3056,15 +3105,10 @@ public class MainGui extends JFrame implements Runnable {
     
     public void printLineAll(final String line) {
         SwingUtilities.invokeLater(() -> {
-            if (channels.getChannelCount() == 0) {
-                Channel panel = channels.getActiveChannel();
-                if (panel != null) {
-                    printInfo(panel, InfoMessage.createInfo(line));
-                }
-            } else {
-                for (Channel channel : channels.channels()) {
-                    printInfo(channel, InfoMessage.createInfo(line));
-                }
+            for (Channel channel : channels.allChannels()) {
+                // Separate for each channel, since it could be modified based
+                // on channel
+                printInfo(channel, InfoMessage.createInfo(line));
             }
         });
     }
@@ -3077,6 +3121,15 @@ public class MainGui extends JFrame implements Runnable {
         });
     }
     
+    /**
+     * Central method for printing info messages. Each message is intended for
+     * a single channel, so for printing to e.g. all channels at once, this is
+     * called once each for all channels.
+     * 
+     * @param channel
+     * @param message
+     * @return 
+     */
     private boolean printInfo(Channel channel, InfoMessage message) {
         boolean ignored = checkInfoMsg(ignoreList, "ignore", message.text, channel.getChannel(), client.addressbook);
         if (!ignored) {
@@ -3105,6 +3158,7 @@ public class MainGui extends JFrame implements Runnable {
                             message.text, channel.getChannel(), client.addressbook);
                     message.color = colorItem.getForegroundIfEnabled();
                     message.bgColor = colorItem.getBackgroundIfEnabled();
+                    notificationManager.info(channel.getRoom(), message.text);
                 }
             }
             channel.printInfoMessage(message);
@@ -3256,8 +3310,10 @@ public class MainGui extends JFrame implements Runnable {
                         && data.type != ModeratorActionData.Type.UNMODDED) {
                     boolean showActions = client.settings.getBoolean("showModActions");
                     boolean showActionsRestrict = client.settings.getBoolean("showModActionsRestrict");
-                    boolean showMessage = showActions && !ownAction
-                            && !(showActionsRestrict && ModLogInfo.isBanOrInfoAssociated(data));
+                    boolean showMessage =
+                               showActions
+                            && (!ownAction || ModLogInfo.isIndirectAction(data))
+                            && !(showActionsRestrict && ModLogInfo.isAssociated(data));
                     boolean showActionby = client.settings.getBoolean("showActionBy");
                     for (Channel chan : chans) {
                         // Create for each channel, just in case (since they get
@@ -3476,21 +3532,30 @@ public class MainGui extends JFrame implements Runnable {
         });
     }
     
+    public void startUpdatingState() {
+        state.update(false);
+        javax.swing.Timer timer = new javax.swing.Timer(5000, e -> {
+            state.update(false);
+        });
+        timer.setRepeats(true);
+        timer.start();
+    }
+    
     /**
      * Manages updating the current state, mainly the titles and menus.
      */
     private class StateUpdater {
         
         /**
-         * Saves when the state was last setd, so the delay can be measured.
+         * Saves when the state was last updated, so the delay can be measured.
          */
-        private long stateLastUpdated = 0;
+        private final ElapsedTime lastUpdatedET = new ElapsedTime();
         
         /**
          * Update state no faster than this amount of milliseconds.
          */
         private static final int UPDATE_STATE_DELAY = 500;
-
+        
         /**
          * Update the title and other things based on the current state and
          * stream/channel information. This is a convenience method that doesn't
@@ -3522,10 +3587,13 @@ public class MainGui extends JFrame implements Runnable {
          * @param forced If {@literal true} the update is performed with every call
          */
         protected void update(boolean forced) {
-            if (!forced && System.currentTimeMillis() - stateLastUpdated < UPDATE_STATE_DELAY) {
+            if (!guiCreated) {
                 return;
             }
-            stateLastUpdated = System.currentTimeMillis();
+            if (!forced && !lastUpdatedET.millisElapsed(UPDATE_STATE_DELAY)) {
+                return;
+            }
+            lastUpdatedET.set();
 
             int state = client.getState();
 
@@ -3982,6 +4050,7 @@ public class MainGui extends JFrame implements Runnable {
         tokenDialog.updateAccess(scopes);
         adminDialog.updateAccess(
                 scopes.contains(TokenInfo.Scope.EDITOR.scope),
+                scopes.contains(TokenInfo.Scope.EDIT_BROADCAST.scope),
                 scopes.contains(TokenInfo.Scope.COMMERICALS.scope));
     }
     
@@ -4083,8 +4152,8 @@ public class MainGui extends JFrame implements Runnable {
         client.settings.putList("gamesFavorites", new ArrayList(favorites));
     }
     
-    public void setCommunityFavorites(Map<String, String> favorites) {
-        client.settings.putMap("communityFavorites", favorites);
+    public void setStreamTagFavorites(Map<String, String> favorites) {
+        client.settings.putMap("tagsFavorites", favorites);
     }
     
     /**
@@ -4096,8 +4165,8 @@ public class MainGui extends JFrame implements Runnable {
         return new HashSet<>(client.settings.getList("gamesFavorites"));
     }
     
-    public Map<String, String> getCommunityFavorites() {
-        return client.settings.getMap("communityFavorites");
+    public Map<String, String> getStreamTagFavorites() {
+        return client.settings.getMap("tagsFavorites");
     }
     
     public void putChannelInfoResult(final RequestResultCode result) {
@@ -4433,11 +4502,18 @@ public class MainGui extends JFrame implements Runnable {
     
     private class MainWindowListener extends WindowAdapter {
         
+        private boolean liveStreamsHidden;
+        
         @Override
         public void windowStateChanged(WindowEvent e) {
             if (e.getComponent() == MainGui.this) {
                 saveState(e.getComponent());
                 if (isMinimized()) {
+                    if (liveStreamsDialog.isVisible()
+                            && client.settings.getBoolean("hideStreamsOnMinimize")) {
+                        liveStreamsDialog.setVisible(false);
+                        liveStreamsHidden = true;
+                    }
                     if (client.settings.getBoolean("minimizeToTray")) {
                         minimizeToTray();
                     }
@@ -4445,6 +4521,10 @@ public class MainGui extends JFrame implements Runnable {
                     // Only cleanup from tray if not minimized, when minimized
                     // cleanup should never be done
                     cleanupAfterRestoredFromTray();
+                    if (liveStreamsHidden) {
+                        liveStreamsDialog.setVisible(true);
+                        liveStreamsHidden = false;
+                    }
                 }
             }
         }
@@ -4491,9 +4571,16 @@ public class MainGui extends JFrame implements Runnable {
      * Remove tray icon if applicable.
      */
     private void cleanupAfterRestoredFromTray() {
-        if (client.settings.getLong("nType") != NotificationSettings.NOTIFICATION_TYPE_TRAY) {
+        if (client.settings.getLong("nType") != NotificationSettings.NOTIFICATION_TYPE_TRAY
+                && !client.settings.getBoolean("trayIconAlways")) {
             trayIcon.setIconVisible(false);
         }
+    }
+    
+    public void showPopupMessage(String text) {
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(this, text);
+        });
     }
     
     /**

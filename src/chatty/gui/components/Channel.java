@@ -7,6 +7,7 @@ import chatty.gui.StyleManager;
 import chatty.gui.StyleServer;
 import chatty.gui.MainGui;
 import chatty.User;
+import chatty.gui.GuiUtil;
 import chatty.gui.components.menus.ContextMenuListener;
 import chatty.gui.components.textpane.ChannelTextPane;
 import chatty.gui.components.textpane.InfoMessage;
@@ -119,6 +120,7 @@ public class Channel extends JPanel {
         // Remove PAGEUP/DOWN so it can scroll chat (as before JTextArea)
         input.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), "-");
         input.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), "-");
+        GuiUtil.installLengthLimitDocumentFilter(input, 500, false);
 
         // Buttons under Stream
         JButton timer_list = new JButton("!timer list");
@@ -375,6 +377,7 @@ public class Channel extends JPanel {
             "dir", "wdir", "openDir", "openWdir",
             "showBackupDir", "openBackupDir", "showDebugDir", "openDebugDir",
             "showTempDir", "openTempDir", "showJavaDir", "openJavaDir",
+            "showFallbackFontDir", "openFallbackFontDir",
             "clearChat", "refresh", "changeToken", "testNotification", "server",
             "set", "add", "clearSetting", "remove", "customCompletion",
             "clearStreamChat", "getStreamChatSize", "setStreamChatSize", "streamChatTest", "openStreamChat",

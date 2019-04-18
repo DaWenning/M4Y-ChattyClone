@@ -377,7 +377,21 @@ public class Helper {
         return HTMLSPECIALCHARS_ENCODE.replace(s);
     }
     
+    private static final Pattern EMOJI_VARIATION_SELECTOR = Pattern.compile("[\uFE0E\uFE0F]");
     
+    /**
+     * Remove both the text style and emoji style variation selector from the
+     * input.
+     * 
+     * @param input
+     * @return 
+     */
+    public static String removeEmojiVariationSelector(String input) {
+        if (input == null) {
+            return null;
+        }
+        return EMOJI_VARIATION_SELECTOR.matcher(input).replaceAll("");
+    }
     
     private static final Pattern UNDERSCORE = Pattern.compile("_");
     
@@ -556,9 +570,9 @@ public class Helper {
      */
     private static final String TLD = "(?:tv|com|org|edu|gov|uk|net|ca|de|jp|fr|au|us|ru|ch|it|nl|se|no|es|me|gl|fm|io|gg|be)";
     
-    private static final String MID = "[-A-Z0-9+&@#/%=~_|$?!:,;.()]";
+    private static final String MID = "[^\\s]";
     
-    private static final String END = "[A-Z0-9+&@#/%=~_|$)]";
+    private static final String END = "[^:,.\\s]";
     
     /**
      * Start of the URL.

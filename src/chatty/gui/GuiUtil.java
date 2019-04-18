@@ -3,14 +3,17 @@ package chatty.gui;
 
 import chatty.Helper;
 import chatty.gui.components.textpane.ChannelTextPane;
+import chatty.util.Debugging;
 import chatty.util.MiscUtil;
 import chatty.util.ProcessManager;
+import chatty.util.StringUtil;
 import chatty.util.commands.CustomCommand;
 import chatty.util.commands.Parameters;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
+import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
@@ -50,9 +53,12 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Document;
+import javax.swing.text.DocumentFilter;
 import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
 
@@ -185,7 +191,7 @@ public class GuiUtil {
             return;
         }
         // Use screen the mouse is on
-        Rectangle screen = MouseInfo.getPointerInfo().getDevice().getDefaultConfiguration().getBounds();
+        Rectangle screen = getEffectiveScreenBounds(MouseInfo.getPointerInfo().getDevice().getDefaultConfiguration());
         Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
         int width = c.getWidth();
         int height = c.getHeight();
@@ -213,20 +219,37 @@ public class GuiUtil {
         c.setLocation(mouseLocation);
     }
     
-    private static final int SHAKE_INTENSITY = 2;
+    public static Rectangle getEffectiveScreenBounds(GraphicsConfiguration config) {
+        Rectangle bounds = config.getBounds();
+        Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
+        Debugging.println("screenbounds", "%s %s", bounds, insets);
+        bounds.x += insets.left;
+        bounds.y += insets.top;
+        bounds.width -= insets.right + insets.left;
+        bounds.height -= insets.bottom + insets.top;
+        return bounds;
+    }
     
-    public static void shake(Window window) {
+    /**
+     * Moves the window very quickly to create a shaking effect, ending on the
+     * original location. Uses Thread.sleep() so length should not be too high.
+     *
+     * @param window The window to shake
+     * @param intensity The distance the window will move
+     * @param length The number of iterations of the shaking effect
+     */
+    public static void shake(Window window, int intensity, int length) {
         Point original = window.getLocation();
-        for (int i=0;i<2;i++) {
+        for (int i=0;i<length;i++) {
             try {
                 // Using Thread.sleep() is not ideal because it freezes the GUI,
                 // but it's really short
                 Thread.sleep(50);
-                window.setLocation(original.x+SHAKE_INTENSITY, original.y);
+                window.setLocation(original.x+intensity, original.y);
                 Thread.sleep(10);
-                window.setLocation(original.x, original.y-SHAKE_INTENSITY);
+                window.setLocation(original.x, original.y-intensity);
                 Thread.sleep(10);
-                window.setLocation(original.x-SHAKE_INTENSITY, original.y+SHAKE_INTENSITY);
+                window.setLocation(original.x-intensity, original.y+intensity);
                 Thread.sleep(10);
                 window.setLocation(original);
             } catch (InterruptedException ex) {
@@ -242,7 +265,7 @@ public class GuiUtil {
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
             JButton button = new JButton("Shake");
-            button.addActionListener(e -> shake(dialog));
+            button.addActionListener(e -> shake(dialog, 2, 2));
             dialog.add(button);
             dialog.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         });
@@ -496,6 +519,58 @@ public class GuiUtil {
                 }
             }
         });
+    }
+    
+    /**
+     * Set a DocumentFilter that limits the text length and allows or filters
+     * linebreak characters.
+     * 
+     * Note that this replaces an already set DocumentFilter.
+     * 
+     * @param comp The JTextComponent, using AbstractDocument
+     * @param limit The character limit
+     * @param allowNewlines false to filter linebreak characters
+     */
+    public static void installLengthLimitDocumentFilter(JTextComponent comp, int limit, boolean allowNewlines) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("Invalid limit < 0");
+        }
+        DocumentFilter filter = new DocumentFilter() {
+            
+            @Override
+            public void replace(DocumentFilter.FilterBypass fb, int offset,
+                    int delLength, String text, AttributeSet attrs) throws BadLocationException {
+                if (text == null || text.isEmpty()) {
+                    super.replace(fb, offset, delLength, text, attrs);
+                } else {
+                    int currentLength = fb.getDocument().getLength();
+                    int overLimit = (currentLength + text.length()) - limit - delLength;
+                    if (overLimit > 0) {
+                        /**
+                         * Might be negative otherwise if limit already exceeded
+                         * (e.g. if the filter wasn't always active).
+                         */
+                        int newLength = Math.max(text.length() - overLimit, 0);
+                        text = text.substring(0, newLength);
+                    }
+                    if (!allowNewlines) {
+                        text = StringUtil.removeLinebreakCharacters(text);
+                    }
+                    super.replace(fb, offset, delLength, text, attrs);
+                }
+            }
+            
+        };
+        Document doc = comp.getDocument();
+        if (doc instanceof AbstractDocument) {
+            AbstractDocument ad = (AbstractDocument)doc;
+//            if (ad.getDocumentFilter() != null) {
+//                System.out.println("Filter already installed "+comp);
+//            }
+            ad.setDocumentFilter(filter);
+        } else {
+            throw new IllegalArgumentException("Textcomponent not using AbstractDocument");
+        }
     }
     
 }
