@@ -190,6 +190,8 @@ public class MainMenu extends JMenuBar {
             addItem(extra,"unhandledException", "Unhandled Exception");
         }
         addItem(extra,"debug","Debug window");
+        extra.addSeparator();
+        addItem(extra, "m4y.bot_control");
         
         // Maybe add own submenu later when more functions are available
 //        extra.addSeparator();

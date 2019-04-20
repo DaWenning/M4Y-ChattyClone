@@ -18,6 +18,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.swing.*;
+
 /**
  * Manage (add/change/get/save/load) settings.
  * 
@@ -832,9 +834,11 @@ public class Settings {
 
         for (Entry<String,Setting> entry : settings.entrySet()) {
             // For every defined setting
+
             Setting setting = entry.getValue();
             String settingName = entry.getKey();
             Object obj = root.get(settingName);
+            System.err.println("SETTINGS READER: " + settingName + " - " + setting.toString());
             if (setting.allowedToSave()) {
                 int objType = getTypeFromObject(obj);
                 //System.out.println(settingName+" "+objType);
@@ -962,6 +966,7 @@ public class Settings {
                 try {
                     settingsFromJson(input);
                 } catch (ParseException ex) {
+                    JOptionPane.showMessageDialog(null, input, "PARSE ERROR", 0);
                     logParseError(fileName, input, ex);
                 }
             } else {

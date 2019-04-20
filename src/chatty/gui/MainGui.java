@@ -1,21 +1,12 @@
 
 package chatty.gui;
 
+import chatty.gui.components.*;
 import chatty.util.colors.HtmlColors;
 import chatty.Addressbook;
 import chatty.gui.components.textpane.UserMessage;
-import chatty.gui.components.DebugWindow;
-import chatty.gui.components.ChannelInfoDialog;
-import chatty.gui.components.LinkLabelListener;
 import chatty.gui.components.help.About;
-import chatty.gui.components.HighlightedMessages;
-import chatty.gui.components.TokenDialog;
 import chatty.gui.components.admin.AdminDialog;
-import chatty.gui.components.ConnectionDialog;
-import chatty.gui.components.Channel;
-import chatty.gui.components.TokenGetDialog;
-import chatty.gui.components.FavoritesDialog;
-import chatty.gui.components.JoinDialog;
 import chatty.util.*;
 import chatty.util.api.*;
 
@@ -35,19 +26,7 @@ import chatty.gui.Highlighter.Match;
 import chatty.gui.colors.ColorItem;
 import chatty.gui.colors.MsgColorItem;
 import chatty.gui.colors.MsgColorManager;
-import chatty.gui.components.AddressbookDialog;
-import chatty.gui.components.AutoModDialog;
-import chatty.gui.components.ChatRulesDialog;
-import chatty.gui.components.EmotesDialog;
-import chatty.gui.components.ErrorMessage;
-import chatty.gui.components.FollowersDialog;
-import chatty.gui.components.LiveStreamsDialog;
-import chatty.gui.components.LivestreamerDialog;
-import chatty.gui.components.ModerationLog;
-import chatty.gui.components.NewsDialog;
 import chatty.gui.components.srl.SRL;
-import chatty.gui.components.SearchDialog;
-import chatty.gui.components.StreamChat;
 import chatty.gui.components.updating.UpdateDialog;
 import chatty.gui.components.menus.CommandActionEvent;
 import chatty.gui.components.menus.CommandMenuItems;
@@ -152,6 +131,7 @@ public class MainGui extends JFrame implements Runnable {
     private ModerationLog moderationLog;
     private AutoModDialog autoModDialog;
     private ChatRulesDialog chatRulesDialog;
+    //private BotControlDialog botControlDialog;
     
     // Helpers
     private final Highlighter highlighter = new Highlighter();
@@ -307,6 +287,8 @@ public class MainGui extends JFrame implements Runnable {
         
         chatRulesDialog = new ChatRulesDialog(this);
         channels.setOnceOffEditListener(chatRulesDialog);
+
+        //botControlDialog = new BotControlDialog(this);
         
         //this.getContentPane().setBackground(new Color(0,0,0,0));
 
@@ -612,6 +594,14 @@ public class MainGui extends JFrame implements Runnable {
             @Override
             public void actionPerformed(ActionEvent e) {
                 openHelp("");
+            }
+        });
+
+        addMenuAction("m4y.bot_control", "M4Y - Bot Control", KeyEvent.VK_UNDEFINED, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //JOptionPane.showMessageDialog(null, "BOT CONTROL", "Bot Control", JOptionPane.INFORMATION_MESSAGE);
+                openBotControl();
             }
         });
         
@@ -2622,7 +2612,12 @@ public class MainGui extends JFrame implements Runnable {
     private void openSrlRaces() {
         srl.openRaceList();
     }
-    
+
+    private void openBotControl() {
+        BotControlDialog bcd = new BotControlDialog(this);
+        bcd.setVisible(true);
+    }
+
     /*
      * Channel Management
      */
@@ -4618,5 +4613,6 @@ public class MainGui extends JFrame implements Runnable {
             dispose();
         }
     }
+
     
 }

@@ -300,6 +300,10 @@ public class SettingsManager {
         settings.addBoolean("saveChannelHistory", true);
         settings.addBoolean("historyClear", true);
         settings.addLong("favoritesSorting", 20);
+
+        settings.addString("m4y_botcontrol_apikey", "");
+        settings.addString("m4y_botcontrol_workspace", "");
+
         
         //=======================
         // Channel Admin Features

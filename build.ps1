@@ -1,3 +1,0 @@
-./gradlew release
-
-clear
