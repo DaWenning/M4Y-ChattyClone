@@ -12,6 +12,7 @@ import chatty.util.commands.Parameters;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
@@ -73,6 +74,7 @@ public class GuiUtil {
     
     public final static Insets NORMAL_BUTTON_INSETS = new Insets(2, 14, 2, 14);
     public final static Insets SMALL_BUTTON_INSETS = new Insets(-1, 10, -1, 10);
+    public final static Insets SMALLER_BUTTON_INSETS = new Insets(0, 4, 0, 4);
     public final static Insets SPECIAL_BUTTON_INSETS = new Insets(2, 12, 2, 6);
     public final static Insets SPECIAL_SMALL_BUTTON_INSETS = new Insets(-1, 12, -1, 6);
     
@@ -192,7 +194,7 @@ public class GuiUtil {
         }
         // Use screen the mouse is on
         Rectangle screen = getEffectiveScreenBounds(MouseInfo.getPointerInfo().getDevice().getDefaultConfiguration());
-        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        Point mouseLocation = new Point(MouseInfo.getPointerInfo().getLocation());
         int width = c.getWidth();
         int height = c.getHeight();
         
@@ -219,8 +221,72 @@ public class GuiUtil {
         c.setLocation(mouseLocation);
     }
     
+    /**
+     * Changes the given x,y position (if necessary) so that an object with the
+     * given Dimension would stay within the given bounds Rectangle (if the
+     * coordinates refer to the upper left corner).
+     * 
+     * @param bounds
+     * @param size
+     * @param x
+     * @param y
+     * @return A new Point object containing the changed coordinates
+     */
+    public static Point getLocationWithinBounds(Rectangle bounds, Dimension size, int x, int y) {
+        // Bottom
+        if (y + size.height > bounds.y + bounds.height) {
+            y = bounds.y + bounds.height - size.height;
+        }
+        
+        // Top (after Bottom, to ensure access to titlebar)
+        if (y < bounds.y) {
+            y = bounds.y;
+        }
+        
+        // Right
+        if (x + size.width > bounds.x + bounds.width) {
+            x = bounds.x + bounds.width - size.width;
+        }
+        
+        // Left
+        if (x < bounds.x) {
+            x = bounds.x;
+        }
+        
+        return new Point(x, y);
+    }
+    
+    /**
+     * Set the location of the given Window to be centered on the given
+     * Component. The difference to window.setLocationRelativeTo() is that it
+     * doesn't move the window horizontally when moving it vertically.
+     *
+     * @param w
+     * @param source 
+     */
+    public static void setLocationRelativeTo(Window w, Component source) {
+        if (source == null || !source.isShowing()) {
+            w.setLocationRelativeTo(source);
+        }
+        Dimension wSize = w.getSize();
+        Dimension sourceSize = source.getSize();
+        Point location = source.getLocationOnScreen();
+        int x = location.x + (sourceSize.width / 2) - (wSize.width / 2);
+        int y = location.y + (sourceSize.height / 2) - (wSize.height / 2);
+        
+        Rectangle bounds = getEffectiveScreenBounds(source);
+        w.setLocation(getLocationWithinBounds(bounds, w.getSize(), x, y));
+    }
+    
+    /**
+     * Get the bounds for the given GraphicsConfiguration, with insets (e.g.
+     * taskbar) removed.
+     * 
+     * @param config
+     * @return 
+     */
     public static Rectangle getEffectiveScreenBounds(GraphicsConfiguration config) {
-        Rectangle bounds = config.getBounds();
+        Rectangle bounds = new Rectangle(config.getBounds());
         Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
         Debugging.println("screenbounds", "%s %s", bounds, insets);
         bounds.x += insets.left;
@@ -228,6 +294,21 @@ public class GuiUtil {
         bounds.width -= insets.right + insets.left;
         bounds.height -= insets.bottom + insets.top;
         return bounds;
+    }
+    
+    /**
+     * Get the bounds of the screen of the given Component, with screen insets
+     * (e.g. taskbar) removed.
+     * 
+     * @param c
+     * @return 
+     */
+    public static Rectangle getEffectiveScreenBounds(Component c) {
+        GraphicsConfiguration config = c.getGraphicsConfiguration();
+        if (config == null) {
+            return null;
+        }
+        return getEffectiveScreenBounds(config);
     }
     
     /**
@@ -253,7 +334,8 @@ public class GuiUtil {
                 Thread.sleep(10);
                 window.setLocation(original);
             } catch (InterruptedException ex) {
-                Logger.getLogger(GuiUtil.class.getName()).log(Level.SEVERE, null, ex);
+                Thread.currentThread().interrupt();
+                // No action required
             }
         }
     }
@@ -571,6 +653,21 @@ public class GuiUtil {
         } else {
             throw new IllegalArgumentException("Textcomponent not using AbstractDocument");
         }
+    }
+    
+    /**
+     * Set the height of the target component to the height of the source
+     * component, by using preferred size.
+     * 
+     * @param target The component to change the size on
+     * @param source The component to retrieve the height from
+     */
+    public static void matchHeight(JComponent target, JComponent source) {
+        target.setPreferredSize(
+                new Dimension(
+                        target.getPreferredSize().width,
+                        source.getPreferredSize().height
+                ));
     }
     
 }

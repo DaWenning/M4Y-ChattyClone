@@ -1,12 +1,11 @@
 package chatty.gui.components;
 
 import chatty.HTTPURLConnector;
-import chatty.Helper;
+
 import chatty.gui.MainGui;
 import chatty.util.settings.Settings;
 
-import com.sun.codemodel.internal.JOp;
-import org.json.*;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -16,8 +15,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import static chatty.gui.GuiUtil.makeGbc;
 

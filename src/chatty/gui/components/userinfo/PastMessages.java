@@ -21,6 +21,7 @@ public class PastMessages extends JTextArea {
     public PastMessages() {
         setEditable(false);
         setLineWrap(true);
+        setWrapStyleWord(true);
     }
     
     public String getCurrentMessage() {
@@ -81,6 +82,17 @@ public class PastMessages extends JTextArea {
                 }
                 b.append("\n");
             }
+            else if (m instanceof User.UnbanMessage) {
+                User.UnbanMessage ubm = (User.UnbanMessage)m;
+                b.append(DateTime.format(m.getTime(), TIMESTAMP)).append(">");
+                if (ubm.type == User.UnbanMessage.TYPE_UNBAN) {
+                    b.append("Unbanned");
+                } else if (ubm.type == User.UnbanMessage.TYPE_UNTIMEOUT) {
+                    b.append("Timeout removed");
+                }
+                b.append(" (@").append(ubm.by).append(")");
+                b.append("\n");
+            }
             else if (m instanceof User.MsgDeleted) {
                 User.MsgDeleted md = (User.MsgDeleted)m;
                 b.append(DateTime.format(m.getTime(), TIMESTAMP)).append(">");
@@ -122,9 +134,17 @@ public class PastMessages extends JTextArea {
                     b.append(">");
                 }
                 b.append(DateTime.format(m.getTime(), TIMESTAMP)).append(">");
-                b.append("Filtered by AutoMod: ").append(ma.message);
+                b.append("Filtered by AutoMod");
+                if (!StringUtil.isNullOrEmpty(ma.reason)) {
+                    b.append(" (").append(ma.reason).append(")");
+                }
+                b.append(": ").append(ma.message);
                 b.append("\n");
             }
+        }
+        // Remove last newline
+        if (b.length() > 0 && b.charAt(b.length() - 1) == '\n') {
+            b.deleteCharAt(b.length() - 1);
         }
         return b.toString();
     }

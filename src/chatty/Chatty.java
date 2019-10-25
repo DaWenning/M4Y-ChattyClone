@@ -32,7 +32,7 @@ public class Chatty {
      * The Chatty website as it can be opened in the menu.
      */
     public static final String WEBSITE =
-            "http://chatty.github.io";
+            "https://chatty.github.io";
     
     /**
      * The Twitch client id of this program.
@@ -285,7 +285,7 @@ public class Chatty {
      * @param output 
      */
     public static void println(String output) {
-        if (Chatty.DEBUG) {
+        if (Chatty.DEBUG || Debugging.isEnabled("println")) {
             System.out.println(output);
         }
     }

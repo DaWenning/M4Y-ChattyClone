@@ -71,7 +71,7 @@ public class MainSettings extends SettingsPanel {
                 +Language.getString("settings.language.info")
                 + "<br /><br />"
                 + "If you would like to help with translations, check "
-                + "[url:http://chatty.github.io/localization.html the website].",
+                + "[url:https://chatty.github.io/localization.html the website].",
                 d.getLinkLabelListener()),
                 d.makeGbc(0, 1, 2, 1));
     }
@@ -80,10 +80,12 @@ public class MainSettings extends SettingsPanel {
         Map<String, String> languageOptions = new LinkedHashMap<>();
         languageOptions.put("", Language.getString("settings.language.option.defaultLanguage"));
         languageOptions.put("zh_TW", "Chinese (traditional)");
+        languageOptions.put("nl", "Dutch / Nederlands");
         languageOptions.put("en_US", "English (US)");
         languageOptions.put("en_GB", "English (UK)");
         languageOptions.put("fr", "French / Français");
         languageOptions.put("de", "German / Deutsch");
+        languageOptions.put("it", "Italian / Italiano");
         languageOptions.put("ja", "Japanese / 日本語");
         languageOptions.put("ko", "Korean / 한국어");
         languageOptions.put("pl", "Polish / Polski");

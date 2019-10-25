@@ -17,6 +17,8 @@
     <h1><a name="top">Release Information</a></h1>
     
     <p>
+        <a href="#0.10">0.10</a> |
+        <a href="#0.9.7">0.9.7</a> |
         <a href="#0.9.6">0.9.6</a> |
         <a href="#0.9.5">0.9.5</a> |
         <a href="#0.9.4">0.9.4</a> |
@@ -56,7 +58,133 @@
     full list of changes.</p>
     
     <h2>
-        <a name="0.9.6">Version 0.9.6</a> <a name="latest">(This one!)</a> (2019-03-27)
+        <a name="0.10">Version 0.10</a> <a name="latest">(This one!)</a> (2019-10-07)
+        <a href="#top" class="top">[back to top]</a>
+    </h2>
+    <p>This update adds limited support for the new channel points feature (more
+        might be possible if and when Twitch releases an official API for it).</p>
+    
+    <p>It also contains some Emote-related changes improving the Emote Dialog,
+        emote information and memory usage. In regards to customization, you can
+        now separately change the color and font of the chat timestamp and
+        favorite channels to show up differently in the Live Streams window.</p>
+    
+    <pre>
+### New Twitch features
+- Added support for receiving emotes modified by channel points (showing in
+  Emotes Dialog/sent messages isn't possible right now due to lack of API data)
+- Added initial support for messages highlighted by channel points
+  - Shown in Highlight colors (can be turned off in the Highlight settings)
+  - Special badge added (can be turned off by adding a Custom Badge of the same
+    type with no image)
+  - Added matching prefix "config:hl" (e.g. for Highlight or Msg. Colors list)
+- Added initial support for displaying custom reward messages in chat (very
+  limited due to lack of Twitch API data)
+
+### Chat
+- Added various timestamp customization settings (font, color, format)
+- Changed behavior of matching prefixes (Highlights, Ignore, etc.)
+  - Prefixes that that don't fit the context (e.g. "user:" on an info messages)
+    now make the match fail
+  - Can now specify the same prefix more than once (e.g. "status:s status:v")
+  - Added some additional prefix options
+- Improved Highlighted Messages window output (colors, more things clickable)
+
+### Emotes
+- Added image to Emote tooltips
+- Implemented new Twitchemotes.com API for more up-to-date data and reduced
+  memory usage
+- Implemented a different Twitch API for more correct emotes display in
+  "My Emotes" and sent messages (mostly for "special" emotes)
+- Some Emotes Dialog improvements
+
+### Commands
+- Added Custom Command function "$replace()"
+- Added some User related Custom Command parameters
+- Changed command "/host" to host current channel if no argument provided
+- Changed command "/userinfo" to trim input and default to local user
+
+### User Dialog
+- Allow smaller minimal size, more flexible sizing
+- Added shortcut setting for ban reasons (Settings -> Moderation)
+
+### Other
+- Live Streams window: Mark Favorited Channels with star and (optionally) sorted
+  first (context menu -> "Sort by" and "Miscellaneous" for options)
+- Added experimental app-wide font scale setting (Settings -> Look)
+- Changed a default font on System-Look&amp;Feel
+- Added "$vip" to Custom Usercolors / Badges
+- Changed notification border color for dark notification backgrounds
+- TAB Completion: Always include current channel name
+- Tray Icon: Added setting to show Chatty with single-click
+- Updated translations / help
+
+### Bugfixes
+- Always show Live Streams window scrollbar, as an error workaround
+- Fixed TAB Completion not working in some cases
+- Fixed error related to TAB Completion
+- Fixed Search dialog background color
+- Various small bugfixes
+    </pre>
+    
+    <h2>
+        <a name="0.9.7">Version 0.9.7</a> (2019-07-15)
+        <a href="#top" class="top">[back to top]</a>
+    </h2>
+    <p>The updated TAB Completion now shows emote images and allows scrolling
+        and inserting results with the mouse. It is also easier accessible since
+        it automatically shows up in some cases and includes some simple usage
+        tooltips. As always, several settings allow customization.</p>
+    
+    <p>Also included in this update are several Moderation and Chat related
+        improvements, updated Emoji, Bugfixes, and more.</p>
+    
+    <pre>
+### TAB Completion
+- Show emote images in TAB Completion popup (not just Emoji)
+- Automatically start TAB Completion in some cases
+- Allow scrolling and selection of emotes with the mouse (Shift-Click to insert
+  several emotes)
+- Improved Emoji search (expanding search if few results, aliases)
+- Added new settings to Settings Dialog
+
+### Custom Commands
+- Added new function `$upper()` (make text uppercase)
+- Added new function `$sort()` (sort token separated items alphabetically)
+- Added new function `$urlencode()` (prepare text for including it in a URL)
+- Added new identifiers `nick`, `reason` and `msg` in some contexts
+- Improved "User Dialog Buttons" setting Test-button to show a User Dialog
+- Improved error output
+
+### Chat / Moderation
+- Added clickable mentions to Info Messages
+- Added Highlight matches marking in AutoMod messages
+- Added AutoMod reason/category (e.g. "aggressive") to User Dialog
+- Added info to User Dialog when a user is unbanned (from Moderation Log)
+- Added setting to add background to unreadable nicknames in chat
+- Added Msg. Colors setting to prefer Custom Msg. Colors over Highlight Colors
+
+### Emoticons
+- Sort Subemote channels in Emotes Dialog alphabetically
+- Added previously missing Cheeremotes
+- Updated Twemoji Emoji to Unicode 12 (and improved metadata)
+
+### Other
+- Disabled rotating tab rows for dark Look&amp;Feels
+- Added scrollbars (if necessary) to Settings Dialog
+- Added `/popoutchannel` command (same as right-click on TAB - Popout)
+
+### Bugfixes
+- Fixed Custom Command $rand() function error
+- Fixed duped emotes occuring when an emote causes a highlight and "Mark all
+  occurences" is enabled
+- Fixed own subemotes missing if subscribed to a lot(!) of different channels
+- Fixed channel context for context menu in non-focused popout
+- Fixed PubSub reconnect delay
+    </pre>
+    
+    <h2>
+        <a name="0.9.6">Version 0.9.6</a> (2019-03-27)
         <a href="#top" class="top">[back to top]</a>
     </h2>
     <p>The new clickable mentions feature allows you to open the User Dialog by

@@ -5,8 +5,6 @@ import chatty.Chatty;
 import chatty.Helper;
 import chatty.gui.emoji.EmojiUtil;
 import chatty.util.StringUtil;
-import chatty.util.TwitchEmotes.Emoteset;
-import chatty.util.TwitchEmotes.EmotesetInfo;
 import chatty.util.settings.Settings;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -18,8 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,7 +82,7 @@ public class Emoticons {
     /**
      * Emoticons associated with an emoteset (Twitch Emotes and others).
      */
-    private final HashMap<Integer,HashSet<Emoticon>> emoticonsByEmoteset = new HashMap<>();
+    private final HashMap<String, HashSet<Emoticon>> emoticonsByEmoteset = new HashMap<>();
     
     /**
      * All successfully loaded Custom Emotes.
@@ -94,7 +92,7 @@ public class Emoticons {
     /**
      * Custom Emotes for lookup by id. All of these are also in customEmotes.
      */
-    private final Map<Integer, Emoticon> customEmotesById = new HashMap<>();
+    private final Map<String, Emoticon> customEmotesById = new HashMap<>();
     
     /**
      * Emoji should be sorted by length, so that longer Emoji (which can be
@@ -121,33 +119,50 @@ public class Emoticons {
     private final Set<Emoticon> otherGlobalEmotes = new HashSet<>();
     
     /**
-     * Twitch emotes associated to their Twitch id.
+     * All loaded Twitch Emotes, by their Twitch Emote Id.
      */
-    private final HashMap<Integer,Emoticon> twitchEmotesById = new HashMap<>();
+    private final HashMap<String,Emoticon> twitchEmotesById = new HashMap<>();
     
     /**
-     * Emoticons associated with a channel (FrankerFaceZ/BTTV).
+     * Emoticons restricted to a channel (FrankerFaceZ/BTTV).
      */
     private final HashMap<String,HashSet<Emoticon>> streamEmoticons = new HashMap<>();
     
+    //===============
+    // Usable Emotes
+    //===============
+    // Used for TAB completion
+    
     /**
-     * Emoteset -> Stream association (from Twitchemotes.com).
+     * Global emotes the local user has access to.
      */
-    private volatile EmotesetInfo emotesetInfo = EmotesetInfo.EMPTY;
+    private final Set<Emoticon> usableGlobalEmotes = new HashSet<>();
+    
+    /**
+     * Channel-specific emotes the local user has access to. Needs to be in a
+     * separate map if the user may not have access to all channel-specific
+     * emotes, which is rather unusual, but some BTTV may have an emoteset as
+     * requirement.
+     * 
+     * TODO: May need to check when localEmotesets changes as well
+     */
+    private final Map<String, Set<Emoticon>> usableStreamEmotes = new HashMap<>();
+    
+    /**
+     * Used to check what emotes the local user has access to for completion. If
+     * this changes, it checks usableGlobalEmotes again.
+     */
+    private Set<String> localEmotesets = new HashSet<>();
+    
+    //==================
+    // Meta Information
+    //==================
     
     private static final HashSet<Emoticon> EMPTY_SET = new HashSet<>();
-    
-    private static final Set<String> EMPTY_STRING_SET = new HashSet<>();
     
     private final Set<String> ignoredEmotes = new HashSet<>();
     
     private final EmoticonFavorites favorites = new EmoticonFavorites();
-    
-    private final Set<String> emoteNames = new HashSet<>();
-    
-    private final Map<String, Set<String>> emotesNamesPerStream = new HashMap<>();
-    
-    private Set<Integer> localEmotesets = new HashSet<>();
     
     public Emoticons() {
         Timer timer = new Timer(1*60*60*1000, e -> {
@@ -176,38 +191,54 @@ public class Emoticons {
             return;
         }
         int removedCount = 0;
-        if (update.typeToRemove == Emoticon.Type.FFZ) {
+        if (update.typeToRemove == Emoticon.Type.FFZ
+                || update.typeToRemove == Emoticon.Type.BTTV) {
             Iterator<Emoticon> it;
             if (update.roomToRemove == null) {
+                // Global Non-Twitch
                 it = otherGlobalEmotes.iterator();
             }
             else {
+                // Channel-specific
                 if (!streamEmoticons.containsKey(update.roomToRemove)) {
                     return;
                 }
                 it = streamEmoticons.get(update.roomToRemove).iterator();
             }
+            // Check selected for removal
             while (it.hasNext()) {
                 Emoticon emote = it.next();
                 if (emote.type == update.typeToRemove) {
                     if (update.subTypeToRemove == null
                             || emote.subType == update.subTypeToRemove) {
                         it.remove();
-                        emoteNames.remove(emote.code);
-                        if (update.roomToRemove != null && emotesNamesPerStream.containsKey(update.roomToRemove)) {
-                            emotesNamesPerStream.get(update.roomToRemove).remove(emote.code);
+                        usableGlobalEmotes.remove(emote);
+                        if (update.roomToRemove != null &&
+                                usableStreamEmotes.containsKey(update.roomToRemove)) {
+                            usableStreamEmotes.get(update.roomToRemove).remove(emote);
                         }
                         removedCount++;
                     }
                 }
             }
         }
+        if (update.typeToRemove == Emoticon.Type.TWITCH
+                && update.setsToRemove != null) {
+            for (String set : update.setsToRemove) {
+                Set<Emoticon> removed = emoticonsByEmoteset.remove(set);
+                if (removed != null) {
+                    removedCount += removed.size();
+                    removed.forEach(e -> usableGlobalEmotes.remove(e));
+                }
+            }
+        }
         if (removedCount >= 0) {
-            LOGGER.info(String.format("Removed %d emotes (%s/%s/%s)",
+            LOGGER.info(String.format("Removed %d emotes (%s/%s/%s/%s)",
                     removedCount,
                     update.typeToRemove,
                     update.subTypeToRemove,
-                    update.roomToRemove));
+                    update.roomToRemove,
+                    update.setsToRemove));
         }
     }
     
@@ -253,16 +284,16 @@ public class Emoticons {
                     }
                 } else {
                     // Emoteset based
-                    Integer emoteset = emote.emoteSet > -1 ? emote.emoteSet : null;
+                    String emoteset = emote.emoteset;
                     if (!emoticonsByEmoteset.containsKey(emoteset)) {
-                        emoticonsByEmoteset.put(emoteset, new HashSet<Emoticon>());
+                        emoticonsByEmoteset.put(emoteset, new HashSet<>());
                     }
                     addEmote(emoticonsByEmoteset.get(emoteset), emote);
                 }
             }
             // By Twitch Emote ID
-            if (emote.type == Emoticon.Type.TWITCH && emote.numericId != Emoticon.ID_UNDEFINED) {
-                twitchEmotesById.put(emote.numericId, emote);
+            if (emote.type == Emoticon.Type.TWITCH && emote.stringId != null) {
+                twitchEmotesById.put(emote.stringId, emote);
             }
         }
         LOGGER.info("Added "+newEmoticons.size()+" emotes."
@@ -283,19 +314,22 @@ public class Emoticons {
          * Add emote codes for TAB Completion. Only add emotes the local user
          * has access to.
          */
-        if ((emote.hasGlobalEmoteset() || localEmotesets.contains(emote.emoteSet))) {
+        if ((emote.hasGlobalEmoteset() || localEmotesets.contains(emote.emoteset))) {
             if (!emote.hasStreamRestrictions()) {
-                emoteNames.add(emote.code);
+                usableGlobalEmotes.add(emote);
             } else {
-                // Channel specific emotes
                 for (String stream : emote.getStreamRestrictions()) {
-                    if (!emotesNamesPerStream.containsKey(stream)) {
-                        emotesNamesPerStream.put(stream, new HashSet<String>());
+                    if (!usableStreamEmotes.containsKey(stream)) {
+                        usableStreamEmotes.put(stream, new HashSet<>());
                     }
-                    emotesNamesPerStream.get(stream).add(emote.code);
+                    usableStreamEmotes.get(stream).add(emote);
                 }
             }
         }
+        
+        /**
+         * Add to collection.
+         */
         collection.remove(emote);
         collection.add(emote);
     }
@@ -306,7 +340,7 @@ public class Emoticons {
      * @param emote 
      */
     public void addTempEmoticon(Emoticon emote) {
-        twitchEmotesById.put(emote.numericId, emote);
+        twitchEmotesById.put(emote.stringId, emote);
     }
     
     private static int clearOldEmoticonImages(Collection<Emoticon> emotes) {
@@ -321,7 +355,7 @@ public class Emoticons {
         return customEmotes;
     }
     
-    public Emoticon getCustomEmoteById(int id) {
+    public Emoticon getCustomEmoteById(String id) {
         return customEmotesById.get(id);
     }
     
@@ -364,32 +398,22 @@ public class Emoticons {
         return otherGlobalEmotes;
     }
     
-    public HashMap<Integer, Emoticon> getEmoticonsById() {
+    public HashMap<String, Emoticon> getEmoticonsById() {
         return twitchEmotesById;
     }
     
     /**
      * Gets a list of emoticons that are associated with the given emoteset.
-     * This returns the original Set, so it should not be modified.
+     * This returns the original Set, so it should not be modified. Does not
+     * return emotes for the global emoteset (0).
      *
      * @param emoteSet
      * @return
      */
-    public HashSet<Emoticon> getEmoticons(int emoteSet) {
+    public HashSet<Emoticon> getEmoticonsBySet(String emoteSet) {
         HashSet<Emoticon> result = emoticonsByEmoteset.get(emoteSet);
         if (result == null) {
             result = EMPTY_SET;
-        }
-        return result;
-    }
-    
-    public Set<Emoticon> getEmoticons(Set<Emoteset> emotesets) {
-        Set<Emoticon> result = new HashSet<>();
-        for (Emoteset set : emotesets) {
-            Set<Emoticon> emotes = emoticonsByEmoteset.get(set.emoteset_id);
-            if (emotes != null) {
-                result.addAll(emotes);
-            }
         }
         return result;
     }
@@ -401,7 +425,7 @@ public class Emoticons {
      * @param stream The name of the channel
      * @return
      */
-    public HashSet<Emoticon> getEmoticons(String stream) {
+    public HashSet<Emoticon> getEmoticonsByStream(String stream) {
         HashSet<Emoticon> result = streamEmoticons.get(stream);
         if (result == null) {
             result = EMPTY_SET;
@@ -409,50 +433,87 @@ public class Emoticons {
         return result;
     }
     
-    public Collection<String> getEmoteNames() {
-        return emoteNames;
+    public Collection<Emoticon> getLocalTwitchEmotes() {
+        return usableGlobalEmotes;
     }
     
-    public Collection<String> getEmotesNamesByStream(String stream) {
-        Collection<String> names = emotesNamesPerStream.get(stream);
-        return names == null ? EMPTY_STRING_SET : names;
+    public Collection<Emoticon> getUsableEmotesByStream(String stream) {
+        Collection<Emoticon> names = usableStreamEmotes.get(stream);
+        return names == null ? EMPTY_SET : names;
     }
     
-    public void updateEmoteNames(Set<Integer> emotesets) {
+    /**
+     * Update Twitch Emotes for TAB Completion. Twitch Emotes are always global,
+     * so only need to update usableGlobalEmotes. This only updates based on
+     * emotesets, other global emotes (like FFZ) must not be removed by this.
+     * 
+     * @param emotesets 
+     */
+    public void updateLocalEmotes(Set<String> emotesets) {
         if (!this.localEmotesets.equals(emotesets)) {
             this.localEmotesets = emotesets;
-            for (int emoteset : emotesets) {
-                for (Emoticon emote : getEmoticons(emoteset)) {
-                    emoteNames.add(emote.code);
+            // Remove emotes not having current sets (and not being global)
+            Iterator<Emoticon> it = usableGlobalEmotes.iterator();
+            while (it.hasNext()) {
+                Emoticon emote = it.next();
+                if (!emote.hasGlobalEmoteset() && !localEmotesets.contains(emote.emoteset)) {
+                    it.remove();
+                }
+            }
+            // Add all emotes for current sets
+            for (String emoteset : emotesets) {
+                for (Emoticon emote : getEmoticonsBySet(emoteset)) {
+                    usableGlobalEmotes.add(emote);
                 }
             }
         }
     }
     
+    public Set<String> getLocalEmotesets() {
+        return localEmotesets;
+    }
+    
+    private static final List<String> TURBO_EMOTESETS = Arrays.asList(new String[]{
+        "33", "42", "457", "793", "19194"});
+    
     /**
      * Checks whether the given emoteset is a turbo emoteset. This may be
      * incomplete.
      * 
-     * @param emoteSet The emoteset to check
+     * @param emoteset The emoteset to check
      * @return true when it is a turbo emoteset, false otherwise
      */
-    public static boolean isTurboEmoteset(int emoteSet) {
-        return emoteSet == 33 || emoteSet == 42 || emoteSet == 457
-                || emoteSet == 793 || emoteSet == 19194;
+    public static boolean isTurboEmoteset(String emoteset) {
+        if (emoteset == null) {
+            return false;
+        }
+        return TURBO_EMOTESETS.contains(emoteset);
     }
     
-    //===============
-    // Emoteset Info
-    //===============
+    private static final Pattern SPLIT_EMOTESETS = Pattern.compile(",");
+    
     /**
-     * Sets the emoteset data, if non-null.
+     * Parses a comma-separated list of emotesets. Empty or whitespace only
+     * values are ignored. Returns null if no emotesets found.
      * 
-     * @param info 
+     * @param input
+     * @return A set of emotesets, or null
      */
-    public void setEmotesetInfo(EmotesetInfo info) {
-        if (info != null) {
-            emotesetInfo = info;
+    public static Set<String> parseEmotesets(String input) {
+        if (input == null) {
+            return null;
         }
+        Set<String> result = null;
+        String[] split = SPLIT_EMOTESETS.split(input);
+        for (String set : split) {
+            if (!set.trim().isEmpty()) {
+                if (result == null) {
+                    result = new HashSet<>();
+                }
+                result.add(set);
+            }
+        }
+        return result;
     }
     
     /**
@@ -464,55 +525,11 @@ public class Emoticons {
      * @return The name of the stream, or null if none could be found for this
      * emoteset
      */
-    public String getLabelByEmoteset(int emoteset) {
+    public String getLabelByEmoteset(String emoteset) {
         if (isTurboEmoteset(emoteset)) {
             return "Turbo/Prime Emotes";
         }
-        Emoteset info = emotesetInfo.getEmotesetInfo(emoteset);
-        if (info != null) {
-            if (info.stream != null) {
-                return info.stream;
-            }
-            return info.product;
-        }
         return null;
-    }
-    
-    public Emoteset getInfoByEmoteset(int emoteset) {
-        return emotesetInfo.getEmotesetInfo(emoteset);
-    }
-    
-    public Emoteset getInfoByEmoteId(int emoteId) {
-        return emotesetInfo.getEmotesetInfoByEmoteId(emoteId);
-    }
-    
-    /**
-     * Gets the emoteset from the given stream name. This of course only works
-     * if the emoteset data was actually successfully requested before calling
-     * this.
-     * 
-     * @param stream The name of the stream to get the emoteset for
-     * @return The emoteset, or -1 if none could be found
-     */
-    public Set<Emoteset> getEmotesetsByStream(String stream) {
-        if (emotesetInfo != null) {
-            return emotesetInfo.getEmotesetsByStream(stream);
-        }
-        return null;
-    }
-    
-    public static void addInfo(EmotesetInfo data, Emoticon emote) {
-        if (!emote.hasGlobalEmoteset() && !emote.hasStreamSet()) {
-            Emoteset info = data.getEmotesetInfo(emote.emoteSet);
-            if (info != null) {
-                emote.setStream(info.stream);
-                emote.setEmotesetInfo(info.product);
-            }
-        }
-    }
-    
-    public EmotesetInfo getEmotesetInfo() {
-        return emotesetInfo;
     }
     
     //================
@@ -582,8 +599,8 @@ public class Emoticons {
                 +" / Type: "+emote.type+" / "
                 +(emote.hasGlobalEmoteset()
                     ? "Usable by everyone"
-                    : ("Emoteset: "+emote.emoteSet
-                      +" ("+getLabelByEmoteset(emote.emoteSet)+")"))
+                    : ("Emoteset: "+emote.emoteset
+                      +" ("+getLabelByEmoteset(emote.emoteset)+")"))
                 
                 +(streams == null
                     ? " / Usable in all channels"
@@ -646,9 +663,9 @@ public class Emoticons {
         return filtered;
     }
     
-    public boolean equalsByCode(int setA, int setB) {
-        Collection<Emoticon> a = getEmoticons(setA);
-        Collection<Emoticon> b = getEmoticons(setB);
+    public boolean equalsByCode(String setA, String setB) {
+        Collection<Emoticon> a = getEmoticonsBySet(setA);
+        Collection<Emoticon> b = getEmoticonsBySet(setB);
         return equalsByCode(a, b);
     }
     
@@ -711,8 +728,8 @@ public class Emoticons {
         favorites.find(twitchEmotesById, otherGlobalEmotes, emoji, customEmotes);
     }
     
-    public Set<Integer> getFavoritesEmotesets() {
-        return favorites.getEmotesets();
+    public Set<String> getFavoritesNonGlobalEmotesets() {
+        return favorites.getNonGlobalEmotesets();
     }
     
     public void saveFavoritesToSettings(Settings settings) {
@@ -778,8 +795,8 @@ public class Emoticons {
         String code = null;
         boolean literal = true;
         String url = null;
-        int emoteset = Emoticon.SET_UNDEFINED;
-        int id = Emoticon.ID_UNDEFINED;
+        String emoteset = Emoticon.SET_NONE;
+        String id = null;
         // Use Dimension because it's easier to check if one value is set
         Dimension size = null;
         String streamRestriction = null;
@@ -792,17 +809,9 @@ public class Emoticons {
                 literal = false;
                 code = item.substring("re:".length());
             } else if (item.startsWith("id:")) {
-                try {
-                    id = Integer.parseInt(item.substring("id:".length()));
-                } catch (NumberFormatException ex) {
-                    // Just don't set the id
-                }
+                id = item.substring("id:".length());
             } else if (item.startsWith("set:")) {
-                try {
-                    emoteset = Integer.parseInt(item.substring("set:".length()));
-                } catch (NumberFormatException ex) {
-                    // Just don't set the emoteset
-                }
+                emoteset = item.substring("set:".length());
             } else if (item.startsWith("chan:") && item.length() > "chan:".length()) {
                 streamRestriction = Helper.toStream(item.substring("chan:".length()));
             } else if (item.startsWith("size:")) {
@@ -841,14 +850,14 @@ public class Emoticons {
         if (code != null && url != null) {
             Emoticon.Builder b = new Emoticon.Builder(Emoticon.Type.CUSTOM, code, url);
             b.setLiteral(literal).setEmoteset(emoteset);
-            b.setNumericId(id);
+            b.setStringId(id);
             if (size != null) {
                 b.setSize(size.width, size.height);
             }
             b.addStreamRestriction(streamRestriction);
             Emoticon emote = b.build();
             customEmotes.add(emote);
-            if (id != Emoticon.ID_UNDEFINED) {
+            if (id != null) {
                 customEmotesById.put(id, emote);
             }
             return true;
@@ -872,11 +881,11 @@ public class Emoticons {
             if (emote.hasStreamRestrictions()) {
                 info.add("#"+emote.getStreamRestrictions().iterator().next());
             }
-            if (emote.emoteSet != Emoticon.SET_UNDEFINED) {
-                info.add("set:"+emote.emoteSet);
+            if (emote.emoteset != null) {
+                info.add("set:"+emote.emoteset);
             }
-            if (emote.numericId != Emoticon.ID_UNDEFINED) {
-                info.add("id:"+emote.numericId);
+            if (emote.stringId != null) {
+                info.add("id:"+emote.stringId);
             }
             b.append("\""+emote.code+"\" ");
             if (info.size() > 0) {
@@ -915,7 +924,7 @@ public class Emoticons {
                      * expected, this emote or at least any further ranges for
                      * this emote are ignored.
                      */
-                    int id = Integer.parseInt(emote.substring(0, idEnd));
+                    String id = emote.substring(0, idEnd);
                     String[] emoteRanges = emote.substring(idEnd+1).split(",");
                     
                     // Save all ranges for this emote
@@ -996,11 +1005,11 @@ public class Emoticons {
      */
     public static class TagEmote {
         
-        public final int id;
+        public final String id;
         public final int end;
         
-        public TagEmote(int start, int end) {
-            this.id = start;
+        public TagEmote(String id, int end) {
+            this.id = id;
             this.end = end;
         }
         
@@ -1018,7 +1027,10 @@ public class Emoticons {
         Map<Pattern, String> replacements = new HashMap<>();
         for (Emoticon e : emoji) {
             if (e.stringId != null) {
-                replacements.put(Pattern.compile(e.stringId), e.code);
+                replacements.put(Pattern.compile(e.stringId, Pattern.LITERAL), e.code);
+            }
+            if (e.stringIdAlias != null) {
+                replacements.put(Pattern.compile(e.stringIdAlias, Pattern.LITERAL), e.code);
             }
         }
         emojiReplacement = replacements;
